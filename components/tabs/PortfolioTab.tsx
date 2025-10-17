@@ -1,14 +1,33 @@
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 
-const portfolioHoldings = [
-  { symbol: 'AAPL', name: 'Apple Inc.', shares: 50, price: '$189.98', value: '$9,499', change: '+2.1%', weight: '25.3%' },
-  { symbol: 'NVDA', name: 'NVIDIA Corp.', shares: 20, price: '$875.28', value: '$17,506', change: '+5.4%', weight: '46.6%' },
-  { symbol: 'TSLA', name: 'Tesla Inc.', shares: 30, price: '$242.84', value: '$7,285', change: '+3.2%', weight: '19.4%' },
-  { symbol: 'MSFT', name: 'Microsoft Corp.', shares: 15, price: '$378.91', value: '$5,684', change: '+1.8%', weight: '15.1%' },
-  { symbol: 'META', name: 'Meta Platforms', shares: 10, price: '$352.96', value: '$3,530', change: '-1.2%', weight: '9.4%' },
+// Mock stock data for adding new stocks
+const availableStocks = [
+  { symbol: 'GOOGL', name: 'Alphabet Inc.', price: '$142.50', change: '+1.2%' },
+  { symbol: 'AMZN', name: 'Amazon.com Inc.', price: '$155.30', change: '+0.8%' },
+  { symbol: 'JPM', name: 'JPMorgan Chase & Co.', price: '$178.45', change: '-0.5%' },
+  { symbol: 'JNJ', name: 'Johnson & Johnson', price: '$162.20', change: '+0.3%' },
+  { symbol: 'PG', name: 'Procter & Gamble', price: '$156.80', change: '+0.1%' },
+  { symbol: 'KO', name: 'Coca-Cola Co.', price: '$58.90', change: '-0.2%' },
+  { symbol: 'WMT', name: 'Walmart Inc.', price: '$164.75', change: '+0.7%' },
+  { symbol: 'V', name: 'Visa Inc.', price: '$275.40', change: '+1.1%' },
 ];
+
+interface StockHolding {
+  symbol: string;
+  name: string;
+  shares: number;
+  price: string;
+  buyPrice: number;
+  value: string;
+  change: string;
+  weight: string;
+  profitLoss: number;
+  profitLossPercent: number;
+}
 
 const portfolioMetrics = {
   totalValue: '$43,504',
@@ -36,6 +55,57 @@ const riskAnalysis = [
 ];
 
 export function PortfolioTab() {
+  const [holdings, setHoldings] = useState<StockHolding[]>([
+    { symbol: 'AAPL', name: 'Apple Inc.', shares: 50, price: '$189.98', buyPrice: 175.50, value: '$9,499', change: '+2.1%', weight: '25.3%', profitLoss: 724, profitLossPercent: 8.2 },
+    { symbol: 'NVDA', name: 'NVIDIA Corp.', shares: 20, price: '$875.28', buyPrice: 820.00, value: '$17,506', change: '+5.4%', weight: '46.6%', profitLoss: 1106, profitLossPercent: 6.7 },
+    { symbol: 'TSLA', name: 'Tesla Inc.', shares: 30, price: '$242.84', buyPrice: 220.00, value: '$7,285', change: '+3.2%', weight: '19.4%', profitLoss: 685, profitLossPercent: 10.4 },
+    { symbol: 'MSFT', name: 'Microsoft Corp.', shares: 15, price: '$378.91', buyPrice: 365.00, value: '$5,684', change: '+1.8%', weight: '15.1%', profitLoss: 209, profitLossPercent: 3.8 },
+    { symbol: 'META', name: 'Meta Platforms', shares: 10, price: '$352.96', buyPrice: 380.00, value: '$3,530', change: '-1.2%', weight: '9.4%', profitLoss: -271, profitLossPercent: -7.1 },
+  ]);
+  
+  const [showAddStock, setShowAddStock] = useState(false);
+  const [selectedStock, setSelectedStock] = useState('');
+  const [sharesToAdd, setSharesToAdd] = useState('');
+  const [buyPrice, setBuyPrice] = useState('');
+
+  const removeStock = (symbol: string) => {
+    setHoldings(holdings.filter(holding => holding.symbol !== symbol));
+  };
+
+  const addStock = () => {
+    if (!selectedStock || !sharesToAdd || !buyPrice) return;
+    
+    const stock = availableStocks.find(s => s.symbol === selectedStock);
+    if (!stock) return;
+    
+    const shares = parseInt(sharesToAdd);
+    const currentPrice = parseFloat(stock.price.replace('$', ''));
+    const buyPriceNum = parseFloat(buyPrice);
+    const currentValue = shares * currentPrice;
+    const buyValue = shares * buyPriceNum;
+    const profitLoss = currentValue - buyValue;
+    const profitLossPercent = ((currentValue - buyValue) / buyValue) * 100;
+    
+    const newHolding: StockHolding = {
+      symbol: stock.symbol,
+      name: stock.name,
+      shares: shares,
+      price: stock.price,
+      buyPrice: buyPriceNum,
+      value: `$${currentValue.toLocaleString()}`,
+      change: stock.change,
+      weight: '0%', // Will be calculated based on total portfolio value
+      profitLoss: profitLoss,
+      profitLossPercent: profitLossPercent
+    };
+    
+    setHoldings([...holdings, newHolding]);
+    setSelectedStock('');
+    setSharesToAdd('');
+    setBuyPrice('');
+    setShowAddStock(false);
+  };
+
   return (
     <div className="space-y-6">
       {/* Portfolio Overview */}
@@ -90,38 +160,154 @@ export function PortfolioTab() {
         {/* Holdings */}
         <Card className="bg-slate-800/50 border-slate-700">
           <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <span className="text-blue-400 text-lg">📊</span>
-              Portfolio Holdings
-            </CardTitle>
-            <CardDescription className="text-slate-400">Your current positions</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <span className="text-blue-400 text-lg">📊</span>
+                  Portfolio Holdings
+                </CardTitle>
+                <CardDescription className="text-slate-400">Your current positions</CardDescription>
+              </div>
+              <Button 
+                onClick={() => setShowAddStock(!showAddStock)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <span className="mr-2">➕</span>
+                Add Stock
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
+            {/* Add Stock Form */}
+            {showAddStock && (
+              <div className="mb-6 p-4 rounded-lg bg-slate-900/50 border border-slate-600">
+                <h4 className="text-white font-medium mb-4">Add New Stock</h4>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <div>
+                    <label className="text-slate-400 text-sm mb-2 block">Select Stock</label>
+                    <select
+                      value={selectedStock}
+                      onChange={(e) => setSelectedStock(e.target.value)}
+                      className="w-full p-2 rounded-md bg-slate-800 border border-slate-600 text-white"
+                    >
+                      <option value="">Choose a stock...</option>
+                      {availableStocks.map((stock) => (
+                        <option key={stock.symbol} value={stock.symbol}>
+                          {stock.symbol} - {stock.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-sm mb-2 block">Number of Shares</label>
+                    <Input
+                      type="number"
+                      placeholder="Enter shares"
+                      value={sharesToAdd}
+                      onChange={(e) => setSharesToAdd(e.target.value)}
+                      className="bg-slate-800 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-slate-400 text-sm mb-2 block">Buy Price ($)</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter buy price"
+                      value={buyPrice}
+                      onChange={(e) => setBuyPrice(e.target.value)}
+                      className="bg-slate-800 border-slate-600 text-white"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button 
+                      onClick={addStock}
+                      disabled={!selectedStock || !sharesToAdd || !buyPrice}
+                      className="bg-green-600 hover:bg-green-700 w-full"
+                    >
+                      Add to Portfolio
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
-              {portfolioHoldings.map((holding) => (
-                <div key={holding.symbol} className="flex items-center justify-between p-3 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition-colors">
-                  <div className="flex-1">
+              {holdings.map((holding) => (
+                <div key={holding.symbol} className="p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-white font-medium">{holding.symbol}</span>
+                      <span className="text-white font-medium text-lg">{holding.symbol}</span>
                       <span className="text-slate-400 text-sm">{holding.name}</span>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-slate-300 text-sm">{holding.shares} shares</span>
-                      <span className="text-slate-300 text-sm">•</span>
-                      <span className="text-slate-300 text-sm">{holding.price}</span>
+                    <Button
+                      onClick={() => removeStock(holding.symbol)}
+                      variant="outline"
+                      size="sm"
+                      className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-400"
+                    >
+                      <span className="mr-1">🗑️</span>
+                      Remove
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <div className="text-slate-400 text-xs mb-1">Shares</div>
+                      <div className="text-white font-medium">{holding.shares}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-xs mb-1">Current Price</div>
+                      <div className="text-white font-medium">{holding.price}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-xs mb-1">Buy Price</div>
+                      <div className="text-white font-medium">${holding.buyPrice.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-xs mb-1">Current Value</div>
+                      <div className="text-white font-medium">{holding.value}</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-white font-medium">{holding.value}</div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={holding.change.startsWith('+') ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
-                        {holding.change}
-                      </Badge>
-                      <span className="text-slate-500 text-xs">{holding.weight}</span>
+                  
+                  <div className="mt-3 pt-3 border-t border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <div className="text-slate-400 text-xs mb-1">P&L</div>
+                          <div className={`font-medium ${holding.profitLoss >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {holding.profitLoss >= 0 ? '+' : ''}${holding.profitLoss.toFixed(2)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-slate-400 text-xs mb-1">P&L %</div>
+                          <div className={`font-medium ${holding.profitLossPercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {holding.profitLossPercent >= 0 ? '+' : ''}{holding.profitLossPercent.toFixed(1)}%
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-slate-400 text-xs mb-1">Daily Change</div>
+                          <Badge className={holding.change.startsWith('+') ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}>
+                            {holding.change}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-slate-400 text-xs mb-1">Weight</div>
+                        <div className="text-slate-300 text-sm">{holding.weight}</div>
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
+              
+              {holdings.length === 0 && (
+                <div className="text-center py-8 text-slate-400">
+                  <span className="text-4xl mb-2 block">📈</span>
+                  <p>No stocks in your portfolio yet</p>
+                  <p className="text-sm">Click "Add Stock" to get started</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
