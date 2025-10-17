@@ -1,8 +1,159 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
+import StockChart from '../ui/StockChart';
+
+// API response shape for /api/stocks/[symbol]
+interface ApiStockData {
+  symbol: string;
+  current: {
+    c: number; // close
+    h: number;
+    l: number;
+    o: number;
+    v: number;
+  } | null;
+  historical: Array<{
+    t: number;
+    c: number;
+    h: number;
+    l: number;
+    o: number;
+    v: number;
+  }>;
+  timestamp: string;
+}
+
+type AvailableStock = {
+  symbol: string;
+  name: string;
+  price: string;
+  change: string;
+  volume: string;
+  marketCap: string;
+  pe: number;
+  sector: string;
+  recommendation: string;
+  sentiment: string;
+};
+
+// Shared style helpers (top-level so StockRow can use them)
+const getRecommendationColor = (_recommendation: string) => {
+  // Always render recommendation in grey, no visible border
+  return 'bg-transparent text-slate-300 border-transparent';
+};
+
+const getSentimentColor = (sentiment: string) => {
+  switch (sentiment) {
+    case 'positive': return 'bg-transparent text-green-400 border-transparent';
+    case 'negative': return 'bg-transparent text-red-400 border-transparent';
+    default: return 'bg-transparent text-slate-400 border-transparent';
+  }
+};
+
+function formatSignedPercent(value: number): string {
+  if (value > 0) return `+${value.toFixed(1)}%`;
+  if (value < 0) return `${value.toFixed(1)}%`;
+  return '0.0%';
+}
+
+function StockRow({
+  stock,
+  selectedStock,
+  setSelectedStock
+}: {
+  stock: AvailableStock;
+  selectedStock: string | null;
+  setSelectedStock: (s: string | null) => void;
+}) {
+  const [apiData, setApiData] = useState<ApiStockData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/stocks/${stock.symbol}`);
+        if (!res.ok) throw new Error(`Failed: ${res.status}`);
+        const data: ApiStockData = await res.json();
+        if (isMounted) setApiData(data);
+      } catch {
+        if (isMounted) setApiData(null);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [stock.symbol]);
+
+  const currentPrice = apiData?.current?.c ?? null;
+  const chartData = apiData?.historical?.map((i) => ({ t: i.t, c: i.c })) ?? [];
+  const prevClose = chartData.length >= 2 ? chartData[chartData.length - 2].c : currentPrice ?? 0;
+  const effectiveCurrent = currentPrice ?? (chartData.length ? chartData[chartData.length - 1].c : 0);
+  const change = effectiveCurrent - prevClose;
+  const changePercent = prevClose ? (change / prevClose) * 100 : 0;
+
+  const sentimentLabel = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
+  const sentimentClass = getSentimentColor(sentimentLabel);
+
+  return (
+    <div className="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition-colors">
+      <div className="flex-1">
+        <div className="flex items-center gap-3">
+          <div>
+            <span className="text-white font-medium text-lg">{stock.symbol}</span>
+            <p className="text-slate-400 text-sm">{stock.name}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-white font-medium">
+              {loading ? stock.price : `$${effectiveCurrent.toFixed(2)}`}
+            </p>
+            <p className={
+              change > 0 ? 'text-green-400' : change < 0 ? 'text-red-400' : 'text-slate-400'
+            }>
+              {loading ? stock.change : formatSignedPercent(changePercent)}
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-slate-400 text-sm">P/E: {stock.pe}</p>
+            <p className="text-slate-400 text-sm">Vol: {stock.volume}</p>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="text-right">
+          <Badge className={getRecommendationColor(stock.recommendation)}>
+            {stock.recommendation}
+          </Badge>
+          <Badge className={sentimentClass}>
+            {sentimentLabel}
+          </Badge>
+          <p className="text-slate-500 text-xs mt-1">{stock.marketCap}</p>
+        </div>
+        <div className="flex flex-col gap-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            className="border-slate-500 text-slate-300 rounded-full"
+            onClick={() => setSelectedStock(selectedStock === stock.symbol ? null : stock.symbol)}
+          >
+            <span className="mr-1">📊</span>
+            {selectedStock === stock.symbol ? 'Hide Chart' : 'View Chart'}
+          </Button>
+          <Button size="sm" variant="outline" className="border-slate-500 text-slate-300 rounded-full">
+            <span className="mr-1">🤖</span>
+            AI Insights
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const availableStocks = [
   { 
@@ -109,6 +260,8 @@ export function StocksTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSector, setSelectedSector] = useState('All');
   const [sortBy, setSortBy] = useState('marketCap');
+  const [selectedStock, setSelectedStock] = useState<string | null>(null);
+  const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
 
   const filteredStocks = availableStocks.filter(stock => {
     const matchesSearch = stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -116,24 +269,6 @@ export function StocksTab() {
     const matchesSector = selectedSector === 'All' || stock.sector === selectedSector;
     return matchesSearch && matchesSector;
   });
-
-  const getRecommendationColor = (recommendation: string) => {
-    switch (recommendation) {
-      case 'Strong Buy': return 'bg-green-500/20 text-green-400 border-green-500/50';
-      case 'Buy': return 'bg-blue-500/20 text-blue-400 border-blue-500/50';
-      case 'Hold': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50';
-      case 'Sell': return 'bg-red-500/20 text-red-400 border-red-500/50';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/50';
-    }
-  };
-
-  const getSentimentColor = (sentiment: string) => {
-    switch (sentiment) {
-      case 'positive': return 'bg-green-500/20 text-green-400';
-      case 'negative': return 'bg-red-500/20 text-red-400';
-      default: return 'bg-yellow-500/20 text-yellow-400';
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -154,7 +289,7 @@ export function StocksTab() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="flex-1 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
             />
-            <Button className="bg-orange-600 hover:bg-orange-700">
+            <Button className="bg-orange-600 hover:bg-orange-700" onClick={() => setActiveSymbol(searchQuery.trim().toUpperCase() || null)}>
               <span className="mr-2">🔍</span>
               Search
             </Button>
@@ -223,67 +358,39 @@ export function StocksTab() {
         </Card>
       </div>
 
-      {/* Stocks List */}
-      <Card className="bg-slate-800/50 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <span className="text-blue-400 text-lg">📋</span>
-            Stock Analysis ({filteredStocks.length} stocks)
-          </CardTitle>
-          <CardDescription className="text-slate-400">Real-time data with AI-powered insights</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {filteredStocks.map((stock) => (
-              <div key={stock.symbol} className="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition-colors">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <span className="text-white font-medium text-lg">{stock.symbol}</span>
-                      <p className="text-slate-400 text-sm">{stock.name}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-white font-medium">{stock.price}</p>
-                      <Badge className={
-                        stock.change.startsWith('+') 
-                          ? 'bg-green-500/20 text-green-400 border-green-500/50' 
-                          : 'bg-red-500/20 text-red-400 border-red-500/50'
-                      }>
-                        {stock.change}
-                      </Badge>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-slate-400 text-sm">P/E: {stock.pe}</p>
-                      <p className="text-slate-400 text-sm">Vol: {stock.volume}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <Badge className={getRecommendationColor(stock.recommendation)}>
-                      {stock.recommendation}
-                    </Badge>
-                    <Badge className={getSentimentColor(stock.sentiment)}>
-                      {stock.sentiment}
-                    </Badge>
-                    <p className="text-slate-500 text-xs mt-1">{stock.marketCap}</p>
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                      <span className="mr-1">📊</span>
-                      Analyze
-                    </Button>
-                    <Button size="sm" variant="outline" className="border-slate-600 text-slate-400">
-                      <span className="mr-1">🤖</span>
-                      AI Insights
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Landing empty state (no automatic API calls) */}
+      {!activeSymbol && (
+        <Card className="bg-slate-800/50 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <span className="text-blue-400 text-lg">🏁</span>
+              Search a stock to get started
+            </CardTitle>
+            <CardDescription className="text-slate-400">Enter a ticker like AAPL, MSFT, NVDA to view price and chart</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-slate-300 text-sm">
+              No data loaded yet. Use the search box above and hit Search.
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Stock Chart */}
+      {(activeSymbol || selectedStock) && (
+        <Card className="text-white bg-slate-800/50 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center gap-2">
+              <span className="text-white-400 text-lg">📈</span>
+              {(activeSymbol || selectedStock) as string} Real-time Chart
+            </CardTitle>
+            <CardDescription className="text-slate-400">Live price data and 30-day historical chart</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <StockChart symbol={(activeSymbol || selectedStock) as string} />
+          </CardContent>
+        </Card>
+      )}
 
       {/* AI Stock Recommendations */}
       <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
