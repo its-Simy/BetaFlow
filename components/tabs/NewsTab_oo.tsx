@@ -18,10 +18,70 @@ type NewsItem = {
   readTime: string;
   audioAvailable: boolean;
 };
-
+/*
+const mockNews = [
+  {
+    id: 1,
+    title: "Federal Reserve Signals Potential Rate Cuts in 2024",
+    summary: "The Federal Reserve hints at potential interest rate reductions as inflation shows signs of cooling, sparking optimism in equity markets.",
+    source: "Reuters",
+    timestamp: "2 hours ago",
+    category: "Monetary Policy",
+    sentiment: "positive",
+    readTime: "3 min read",
+    audioAvailable: true
+  },
+  {
+    id: 2,
+    title: "NVIDIA Reports Record Q4 Revenue Driven by AI Chip Demand",
+    summary: "NVIDIA's quarterly earnings exceed expectations with data center revenue surging 409% year-over-year, driven by unprecedented AI chip demand.",
+    source: "Bloomberg",
+    timestamp: "4 hours ago",
+    category: "Earnings",
+    sentiment: "positive",
+    readTime: "4 min read",
+    audioAvailable: true
+  },
+  {
+    id: 3,
+    title: "Tesla Stock Volatility Continues Amid CEO Statements",
+    summary: "Tesla shares experience heightened volatility following Elon Musk's recent statements about autonomous driving timelines and production targets.",
+    source: "CNBC",
+    timestamp: "6 hours ago",
+    category: "Company News",
+    sentiment: "neutral",
+    readTime: "2 min read",
+    audioAvailable: true
+  },
+  {
+    id: 4,
+    title: "Energy Sector Faces Headwinds from Geopolitical Tensions",
+    summary: "Oil and gas stocks decline as geopolitical tensions in the Middle East create uncertainty about energy supply chains and pricing.",
+    source: "Wall Street Journal",
+    timestamp: "8 hours ago",
+    category: "Energy",
+    sentiment: "negative",
+    readTime: "5 min read",
+    audioAvailable: true
+  },
+  {
+    id: 5,
+    title: "Healthcare Stocks Show Undervalued Potential",
+    summary: "Analysts suggest healthcare sector may be undervalued based on Q4 earnings reports and upcoming FDA approvals for major drugs.",
+    source: "Financial Times",
+    timestamp: "10 hours ago",
+    category: "Healthcare",
+    sentiment: "positive",
+    readTime: "4 min read",
+    audioAvailable: true
+  }
+];
+*/
 export function NewsTab() {
   const [searchQuery, setSearchQuery] = useState('');
-
+  /*
+  const [selectedNews, setSelectedNews] = useState<typeof mockNews[0] | null>(null);
+  */
  const [news, setNews] = useState<NewsItem[]>([]);
 const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 useEffect(() => {
@@ -97,7 +157,71 @@ const handleNewsClick = (news: NewsItem) => {    setSelectedNews(news);
       {/* News List */}
       <div className="grid gap-4">
 
-      
+        {/* 
+        {mockNews.map((news) => (
+          <Card 
+            key={news.id} 
+            className="bg-slate-800/50 border-slate-700 hover:bg-slate-800 transition-colors cursor-pointer"
+            onClick={() => handleNewsClick(news)}
+          >
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className={getSentimentColor(news.sentiment)}>
+                      {news.sentiment}
+                    </Badge>
+                    <Badge variant="outline" className="text-slate-400 border-slate-600">
+                      {news.category}
+                    </Badge>
+                    <span className="text-slate-500 text-sm">{news.readTime}</span>
+                  </div>
+                  <h3 className="text-white font-medium text-lg mb-2">{news.title}</h3>
+                  <p className="text-slate-400 text-sm mb-3">{news.summary}</p>
+                  <div className="flex items-center gap-4 text-slate-500 text-sm">
+                    <span>{news.source}</span>
+                    <span>•</span>
+                    <span>{news.timestamp}</span>
+                    {news.audioAvailable && (
+                      <>
+                        <span>•</span>
+                        <span className="text-blue-400">🎵 Audio Available</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 ml-4">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedNews(news);
+                      setViewMode('read');
+                    }}
+                    className="text-slate-400 border-slate-600 hover:bg-slate-700"
+                  >
+                    📖 Read
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedNews(news);
+                      setViewMode('audio');
+                    }}
+                    className="text-slate-400 border-slate-600 hover:bg-slate-700"
+                  >
+                    🎵 Audio
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        */}
         {news.map((news) => (
   <Card
     key={news.id}
