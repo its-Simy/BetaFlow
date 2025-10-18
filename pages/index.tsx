@@ -177,7 +177,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Head>
-        <title>Financial Track - AI-Powered Market Intelligence</title>
+        <title>BetaFlow - AI-Powered Market Intelligence</title>
         <meta name="description" content="AI-Powered Financial Analysis Dashboard with Gemini Integration" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
@@ -191,7 +191,7 @@ const Home = () => {
                 <span className="text-white text-xl">📊</span>
               </div>
               <div>
-                <h1 className="text-white text-xl font-bold">Financial Track</h1>
+                <h1 className="text-white text-xl font-bold">BetaFlow</h1>
                 <p className="text-slate-400 text-sm">AI-Powered Market Intelligence</p>
               </div>
             </div>
