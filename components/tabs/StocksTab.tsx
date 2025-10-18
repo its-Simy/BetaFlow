@@ -216,30 +216,46 @@ export function StocksTab() {
     setSearchError(null);
 
     try {
-      const response = await fetch(`/api/stocks/yfinance/search?q=${encodeURIComponent(query)}`);
+      const response = await fetch(`/api/stocks/yfinance/search?q=${encodeURIComponent(query.trim().toUpperCase())}`);
       if (!response.ok) {
-        throw new Error('Search failed');
+        const errorData = await response.json().catch(() => ({ error: 'Search failed' }));
+        throw new Error(errorData.error || 'Search failed');
       }
       const data = await response.json();
-      setSearchResults([data]); // yfinance search returns single result
+      
+      // Check if we got valid data
+      if (data && data.symbol) {
+        setSearchResults([data]);
+      } else {
+        throw new Error('Invalid stock symbol');
+      }
     } catch (error) {
       console.error('Search error:', error);
-      setSearchError('Failed to search stocks');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to search stocks';
+      setSearchError(errorMessage);
       setSearchResults([]);
     } finally {
       setSearching(false);
     }
   };
 
-  // 🔍 Trigger search when query changes
+  // 🔍 Trigger search when query changes (only for valid symbols)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (searchQuery.trim()) {
-        searchStocks(searchQuery);
+        // Only search if it looks like a valid stock symbol
+        const upper = searchQuery.trim().toUpperCase();
+        const looksLikeSymbol = /^[A-Z]{1,5}$/.test(upper);
+        
+        if (looksLikeSymbol) {
+          searchStocks(searchQuery);
+        } else {
+          setSearchResults([]);
+        }
       } else {
         setSearchResults([]);
       }
-    }, 500); // Debounce search
+    }, 800); // Longer debounce for better UX
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
@@ -283,54 +299,113 @@ export function StocksTab() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 mb-4">
-            <Input
-              placeholder="Search by symbol or company name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleEnterToOpen(); // ✅ Enter submits search
-              }}
-              className="flex-1 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
-            />
+            <div className="flex-1">
+              <Input
+                placeholder="Enter stock symbol (e.g., AAPL, GOOGL, TSLA)..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleEnterToOpen();
+                }}
+                className="w-full bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
+              />
+              <p className="text-slate-500 text-xs mt-1">
+                Enter a valid stock symbol to search for real-time data
+              </p>
+            </div>
             <Button
-              className=" searchButton bg-orange-600 hover:bg-orange-700"
+              className="searchButton bg-orange-600 hover:bg-orange-700"
               onClick={handleEnterToOpen}
+              disabled={!searchQuery.trim() || searching}
             >
               <span className="mr-2">🔍</span>
-              Search
+              {searching ? 'Searching...' : 'Search'}
             </Button>
           </div>
 
           {/* Results panel (yfinance) */}
           {searchQuery && (
             <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900/50">
-              <div className="p-3 border-b border-slate-700 text-slate-400 text-xs">Search Results</div>
+              <div className="p-3 border-b border-slate-700 text-slate-400 text-xs">
+                Search Results for "{searchQuery}"
+              </div>
               <div className="max-h-64 overflow-auto">
-                {searching && <div className="p-3 text-slate-400 text-sm">Searching…</div>}
-                {searchError && <div className="p-3 text-red-400 text-sm">{searchError}</div>}
-                {!searching && !searchError && displayResults.length === 0 && (
-                  <div className="p-3 text-slate-400 text-sm">No results found</div>
+                {searching && (
+                  <div className="p-4 text-center">
+                    <div className="text-slate-400 text-sm mb-2">🔍 Searching for {searchQuery}...</div>
+                    <div className="text-slate-500 text-xs">Fetching real-time data from Yahoo Finance</div>
+                  </div>
+                )}
+                {searchError && (
+                  <div className="p-4 text-center">
+                    <div className="text-red-400 text-sm mb-2">❌ {searchError}</div>
+                    <div className="text-slate-500 text-xs">Please check the symbol and try again</div>
+                  </div>
+                )}
+                {!searching && !searchError && displayResults.length === 0 && searchQuery.length >= 1 && (
+                  <div className="p-4 text-center">
+                    <div className="text-slate-400 text-sm mb-2">No results found for "{searchQuery}"</div>
+                    <div className="text-slate-500 text-xs">Make sure you entered a valid stock symbol</div>
+                  </div>
+                )}
+                {!searching && !searchError && displayResults.length === 0 && searchQuery.length < 1 && (
+                  <div className="p-4 text-center">
+                    <div className="text-slate-400 text-sm">Enter a stock symbol to search</div>
+                  </div>
                 )}
                 {!searching && !searchError && displayResults.map((r) => (
                   <div
                     key={r.symbol}
-                    className="flex items-center justify-between p-3 hover:bg-slate-800/50 cursor-pointer"
+                    className="flex items-center justify-between p-4 hover:bg-slate-800/50 cursor-pointer border-b border-slate-700 last:border-b-0"
                     onClick={() => {
                       setActiveSymbol(r.symbol);
                       setSelectedStock(r.symbol);
                     }}
                   >
                     <div className="flex-1">
-                      <div className="text-white font-medium">{r.symbol}</div>
-                      <div className="text-slate-400 text-xs">{r.name}</div>
-                      <div className="text-slate-500 text-xs mt-1">
-                        ${r.current_price?.toFixed(2) || 'N/A'} • {r.sector || 'Unknown Sector'}
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="text-white font-bold text-lg">{r.symbol}</div>
+                        <div className="text-green-400 text-sm font-medium">
+                          ${r.current_price?.toFixed(2) || 'N/A'}
+                        </div>
+                      </div>
+                      <div className="text-slate-300 text-sm mb-1">{r.name}</div>
+                      <div className="flex items-center gap-3 text-xs text-slate-500">
+                        <span>📊 {r.sector || 'Unknown Sector'}</span>
+                        <span>•</span>
+                        <span>🏢 {r.exchange || 'Unknown Exchange'}</span>
+                        <span>•</span>
+                        <span>💰 ${(r.market_cap / 1e9).toFixed(1)}B</span>
                       </div>
                     </div>
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                      View
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      View Chart
                     </Button>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Popular Stock Suggestions */}
+          {!searchQuery && (
+            <div className="mb-4">
+              <p className="text-slate-400 text-sm mb-2">💡 Try these popular stocks:</p>
+              <div className="flex gap-2 flex-wrap">
+                {['AAPL', 'GOOGL', 'MSFT', 'TSLA', 'AMZN', 'META', 'NVDA', 'NFLX'].map((symbol) => (
+                  <Button
+                    key={symbol}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery(symbol);
+                      setActiveSymbol(symbol);
+                      setSelectedStock(symbol);
+                    }}
+                    className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  >
+                    {symbol}
+                  </Button>
                 ))}
               </div>
             </div>
