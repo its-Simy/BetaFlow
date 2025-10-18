@@ -9,6 +9,7 @@ const cors_1 = __importDefault(require("cors"));
 const news_1 = __importDefault(require("./routes/news"));
 const audio_1 = __importDefault(require("./routes/audio"));
 const readNews_1 = __importDefault(require("./routes/readNews"));
+const insights_1 = __importDefault(require("./routes/insights"));
 const portUtils_1 = require("./utils/portUtils");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
@@ -17,6 +18,7 @@ app.use(express_1.default.json());
 app.use('/api/audio', audio_1.default);
 app.use("/api/news", news_1.default);
 app.use("/readnews", readNews_1.default);
+app.use("/api/insights", insights_1.default);
 // Smart port detection
 const startServer = async () => {
     const preferredPort = (0, portUtils_1.getPortFromEnv)();

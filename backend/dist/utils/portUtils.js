@@ -37,7 +37,7 @@ const findAvailablePort = async (preferredPort, fallbackPorts = []) => {
 };
 exports.findAvailablePort = findAvailablePort;
 const getPortFromEnv = () => {
-    return parseInt(process.env.BACKEND_PORT || '5055', 10);
+    return parseInt(process.env.PORT || '5055', 10);
 };
 exports.getPortFromEnv = getPortFromEnv;
 const getFallbackPorts = () => {

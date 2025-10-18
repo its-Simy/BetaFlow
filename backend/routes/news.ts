@@ -1,11 +1,15 @@
 import express, { Request, Response } from "express";
-import { fetchNews } from "../services/fetchNews";
+import { NewsService } from "../services/newsService";
 
 const router = express.Router();
+const newsService = new NewsService();
 
 router.get("/", async (req: Request, res: Response) => {
   try {
-    const articles = await fetchNews();
+    const articles = await newsService.getTopHeadlines({
+      category: 'business',
+      pageSize: 20
+    });
     res.json({ articles });
   } catch (err: any) {
     console.error("Error fetching news:", err.message);
