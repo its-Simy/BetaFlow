@@ -251,8 +251,11 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
           <CardContent>
             <div className="space-y-4">
               {holdings.map((holding) => {
-                const currentValue = (holding.shares_owned ?? 0) * (holding.current_price ?? 0);
-                const purchaseValue = (holding.shares_owned ?? 0) * (holding.purchase_price ?? 0);
+                const sharesOwned = parseFloat(holding.shares_owned?.toString() ?? '0');
+                const currentPrice = parseFloat(holding.current_price?.toString() ?? '0');
+                const purchasePrice = parseFloat(holding.purchase_price?.toString() ?? '0');
+                const currentValue = sharesOwned * currentPrice;
+                const purchaseValue = sharesOwned * purchasePrice;
                 const profitLoss = currentValue - purchaseValue;
                 const profitLossPercent = purchaseValue > 0 ? (profitLoss / purchaseValue) * 100 : 0;
                 const totalValue = typeof portfolioSummary?.total_value === 'string' 
@@ -281,15 +284,15 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
                         <div className="text-slate-400 text-xs mb-1">Shares</div>
-                        <div className="text-white font-medium">{holding.shares_owned ?? 0}</div>
+                        <div className="text-white font-medium">{parseFloat(holding.shares_owned?.toString() ?? '0')}</div>
                       </div>
                       <div>
                         <div className="text-slate-400 text-xs mb-1">Current Price</div>
-                        <div className="text-white font-medium">${(holding.current_price ?? 0).toFixed(2)}</div>
+                        <div className="text-white font-medium">${(parseFloat(holding.current_price?.toString() ?? '0')).toFixed(2)}</div>
                       </div>
                       <div>
                         <div className="text-slate-400 text-xs mb-1">Buy Price</div>
-                        <div className="text-white font-medium">${(holding.purchase_price ?? 0).toFixed(2)}</div>
+                        <div className="text-white font-medium">${(parseFloat(holding.purchase_price?.toString() ?? '0')).toFixed(2)}</div>
                       </div>
                       <div>
                         <div className="text-slate-400 text-xs mb-1">Current Value</div>
