@@ -82,16 +82,11 @@ const Home = () => {
     }
   };
 
-  const handleSignup = async (name: string, email: string, password: string) => {
+  const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
     setIsLoading(true);
     setAuthError('');
     
     try {
-      // Split name into first and last name
-      const nameParts = name.trim().split(' ');
-      const first_name = nameParts[0];
-      const last_name = nameParts.slice(1).join(' ') || '';
-
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -100,8 +95,8 @@ const Home = () => {
         body: JSON.stringify({ 
           email, 
           password, 
-          first_name, 
-          last_name 
+          first_name: firstName, 
+          last_name: lastName 
         }),
       });
 
