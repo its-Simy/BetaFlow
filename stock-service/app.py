@@ -379,46 +379,58 @@ def get_stock_details(symbol):
     """Get detailed information for a specific stock"""
     try:
         symbol = symbol.upper()
-        ticker = yf.Ticker(symbol)
-        info = ticker.info
         
-        if not info or 'symbol' not in info:
-            return jsonify({"error": "Stock not found"}), 404
+        # Use the same mock data generation as search
+        def generate_mock_stock_data(symbol):
+            # Check if we have detailed mock data for this symbol
+            if symbol in MOCK_STOCK_DATA:
+                return MOCK_STOCK_DATA[symbol]
+            
+            # Generate basic mock data for any symbol
+            import hashlib
+            hash_value = int(hashlib.md5(symbol.encode()).hexdigest()[:8], 16)
+            current_price = 50 + (hash_value % 500)  # Price between $50-$550
+            
+            # Generate consistent data based on symbol hash
+            price_change = (hash_value % 20) - 10  # -10 to +10
+            price_change_percent = (hash_value % 10) - 5  # -5% to +5%
+            
+            return {
+                'symbol': symbol,
+                'name': f'{symbol} Corporation',
+                'current_price': current_price,
+                'currency': 'USD',
+                'exchange': 'NASDAQ',
+                'market_cap': current_price * (1000000 + (hash_value % 50000000)),
+                'sector': 'Technology',
+                'industry': 'Software',
+                'description': f'{symbol} Corporation is a leading technology company.',
+                'logo_url': '',
+                'website': f'https://www.{symbol.lower()}.com',
+                'employees': 1000 + (hash_value % 100000),
+                'city': 'San Francisco',
+                'state': 'CA',
+                'country': 'United States',
+                'zip': '94105',
+                'phone': '555-0123',
+                'ceo': 'John Smith',
+                'founded': 2000 + (hash_value % 25),
+                'pe_ratio': 15 + (hash_value % 30),
+                'eps': current_price / (15 + (hash_value % 30)),
+                'dividend_yield': (hash_value % 5) / 100,
+                'beta': 0.8 + (hash_value % 40) / 100,
+                '52_week_high': current_price * 1.2,
+                '52_week_low': current_price * 0.8,
+                'volume': 1000000 + (hash_value % 10000000),
+                'avg_volume': 2000000 + (hash_value % 20000000),
+                'market_cap_formatted': f'{(current_price * (1000000 + (hash_value % 50000000))) / 1000000000:.1f}B',
+                'price_change': price_change,
+                'price_change_percent': price_change_percent
+            }
         
-        # Get current price and basic info
-        current_price = info.get('currentPrice', info.get('regularMarketPrice', 0))
-        
-        result = {
-            "symbol": symbol,
-            "name": info.get('longName', info.get('shortName', symbol)),
-            "current_price": current_price,
-            "currency": info.get('currency', 'USD'),
-            "exchange": info.get('exchange', 'Unknown'),
-            "market_cap": info.get('marketCap', 0),
-            "sector": info.get('sector', 'Unknown'),
-            "industry": info.get('industry', 'Unknown'),
-            "description": info.get('longBusinessSummary', ''),
-            "logo_url": info.get('logo_url', ''),
-            "website": info.get('website', ''),
-            "employees": info.get('fullTimeEmployees', 0),
-            "city": info.get('city', ''),
-            "state": info.get('state', ''),
-            "country": info.get('country', ''),
-            "phone": info.get('phone', ''),
-            "ceo": info.get('ceo', ''),
-            "founded": info.get('foundedYear', ''),
-            "dividend_yield": info.get('dividendYield', 0),
-            "pe_ratio": info.get('trailingPE', 0),
-            "eps": info.get('trailingEps', 0),
-            "beta": info.get('beta', 0),
-            "52_week_high": info.get('fiftyTwoWeekHigh', 0),
-            "52_week_low": info.get('fiftyTwoWeekLow', 0),
-            "volume": info.get('volume', 0),
-            "avg_volume": info.get('averageVolume', 0),
-            "market_state": info.get('marketState', 'UNKNOWN')
-        }
-        
-        return jsonify(result)
+        # Generate mock data for any symbol
+        mock_data = generate_mock_stock_data(symbol)
+        return jsonify(mock_data)
         
     except Exception as e:
         logger.error(f"Error fetching stock details for {symbol}: {str(e)}")
