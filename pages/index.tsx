@@ -45,19 +45,19 @@ const Home = () => {
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-6 bg-slate-800/50 border border-slate-700">
-            <TabsTrigger value="summary" className="text-white hover:text-white data-[state=active]:bg-blue-500/20 data-[state=active]:text-white">
+            <TabsTrigger value="summary" className="tabsButton text-white hover:text-white data-[state=active]:bg-blue-500/20 data-[state=active]:text-white">
               📈 Summary
             </TabsTrigger>
-            <TabsTrigger value="news" className="text-white hover:text-white data-[state=active]:bg-green-500/20 data-[state=active]:text-white">
+            <TabsTrigger value="news" className="tabsButton text-white hover:text-white data-[state=active]:bg-green-500/20 data-[state=active]:text-white">
               📰 News
             </TabsTrigger>
-            <TabsTrigger value="portfolio" className="text-white hover:text-white data-[state=active]:bg-purple-500/20 data-[state=active]:text-white">
+            <TabsTrigger value="portfolio" className="tabsButton text-white hover:text-white data-[state=active]:bg-purple-500/20 data-[state=active]:text-white">
               💼 Portfolio
             </TabsTrigger>
-            <TabsTrigger value="stocks" className="text-white hover:text-white data-[state=active]:bg-orange-500/20 data-[state=active]:text-white">
+            <TabsTrigger value="stocks" className="tabsButton text-white hover:text-white data-[state=active]:bg-orange-500/20 data-[state=active]:text-white">
               📊 Stocks
             </TabsTrigger>
-            <TabsTrigger value="ai-analysis" className="text-white hover:text-white data-[state=active]:bg-pink-500/20 data-[state=active]:text-white">
+            <TabsTrigger value="ai-analysis" className="tabsButton text-white hover:text-white data-[state=active]:bg-pink-500/20 data-[state=active]:text-white">
               🤖 AI Analysis
             </TabsTrigger>
           </TabsList>
