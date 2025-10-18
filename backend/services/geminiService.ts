@@ -339,7 +339,7 @@ Return only the JSON object:`;
     const confidenceMatch = response.match(/"confidence":\s*(\d+)/);
     
     // Extract key points (even if incomplete)
-    const keyPointsMatch = response.match(/"keyPoints":\s*\[(.*?)(?:\]|$)/s);
+    const keyPointsMatch = response.match(/"keyPoints":\s*\[([\s\S]*?)(?:\]|$)/);
     let keyPoints: string[] = [];
     
     if (keyPointsMatch) {

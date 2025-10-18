@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { SummaryTab } from '../components/tabs/SummaryTab';
@@ -6,10 +6,174 @@ import { NewsTab } from '../components/tabs/NewsTab';
 import { PortfolioTab } from '../components/tabs/PortfolioTab';
 import { StocksTab } from '../components/tabs/StocksTab';
 import { AIAnalysisTab } from '../components/tabs/AIAnalysisTab';
+import { LandingPage } from '../components/LandingPage';
+import { LoginPage } from '../components/auth/LoginPage';
+import { SignupPage } from '../components/auth/SignupPage';
+
+type AuthState = 'landing' | 'login' | 'signup' | 'authenticated';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('summary');
+  const [authState, setAuthState] = useState<AuthState>('landing');
+  const [authError, setAuthError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [portfolioRefreshTrigger, setPortfolioRefreshTrigger] = useState(0);
 
+  // Check for existing authentication on page load
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      // Verify token is still valid by making a test request
+      fetch('/api/portfolio/summary', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      .then(response => {
+        if (response.ok) {
+          setAuthState('authenticated');
+        } else {
+          // Token is invalid, clear storage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      })
+      .catch(() => {
+        // Network error, clear storage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      });
+    }
+  }, []);
+
+  const handleLogin = async (email: string, password: string) => {
+    setIsLoading(true);
+    setAuthError('');
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store user data and token in localStorage
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
+        setAuthState('authenticated');
+        setAuthError('');
+        // Trigger portfolio refresh
+        setPortfolioRefreshTrigger(prev => prev + 1);
+      } else {
+        setAuthError(data.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setAuthError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignup = async (name: string, email: string, password: string) => {
+    setIsLoading(true);
+    setAuthError('');
+    
+    try {
+      // Split name into first and last name
+      const nameParts = name.trim().split(' ');
+      const first_name = nameParts[0];
+      const last_name = nameParts.slice(1).join(' ') || '';
+
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email, 
+          password, 
+          first_name, 
+          last_name 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Account created successfully, now log them in
+        await handleLogin(email, password);
+      } else {
+        setAuthError(data.error || 'Failed to create account');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setAuthError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    // Clear stored user data and token
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setAuthState('landing');
+    setAuthError('');
+  };
+
+  const handleBackToLanding = () => {
+    setAuthState('landing');
+    setAuthError('');
+  };
+
+  const handleSwitchToLogin = () => {
+    setAuthState('login');
+    setAuthError('');
+  };
+
+  const handleSwitchToSignup = () => {
+    setAuthState('signup');
+    setAuthError('');
+  };
+
+  // Render different pages based on auth state
+  if (authState === 'landing') {
+    return <LandingPage onLogin={handleSwitchToLogin} onSignUp={handleSwitchToSignup} />;
+  }
+
+  if (authState === 'login') {
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+        onSwitchToSignup={handleSwitchToSignup}
+        onBackToLanding={handleBackToLanding}
+        error={authError}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  if (authState === 'signup') {
+    return (
+      <SignupPage
+        onSignup={handleSignup}
+        onSwitchToLogin={handleSwitchToLogin}
+        onBackToLanding={handleBackToLanding}
+        error={authError}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  // Authenticated state - show main dashboard
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Head>
@@ -71,7 +235,7 @@ const Home = () => {
           </TabsContent>
 
           <TabsContent value="portfolio">
-            <PortfolioTab />
+            <PortfolioTab refreshTrigger={portfolioRefreshTrigger} />
           </TabsContent>
 
           <TabsContent value="stocks">
