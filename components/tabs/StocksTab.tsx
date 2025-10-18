@@ -4,14 +4,67 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import StockChart from '../ui/StockChart';
-import { useSymbolsSearch } from '../../lib/swr-hooks'; // 🔑 Polygon search
+// Removed Polygon search - now using yfinance service
 
-// --- Types used by the optional StockRow (left intact) ---
-interface ApiStockData {
+// --- Types for yfinance service ---
+interface YFinanceStockData {
   symbol: string;
-  current: { c: number; h: number; l: number; o: number; v: number } | null;
-  historical: Array<{ t: number; c: number; h: number; l: number; o: number; v: number }>;
-  timestamp: string;
+  name: string;
+  current_price: number;
+  currency: string;
+  exchange: string;
+  market_cap: number;
+  sector: string;
+  industry: string;
+  description: string;
+  logo_url: string;
+  website: string;
+  employees: number;
+  city: string;
+  state: string;
+  country: string;
+  phone: string;
+  ceo: string;
+  founded: string;
+  dividend_yield: number;
+  pe_ratio: number;
+  eps: number;
+  beta: number;
+  "52_week_high": number;
+  "52_week_low": number;
+  volume: number;
+  avg_volume: number;
+  market_state: string;
+}
+
+interface YFinanceSearchResult {
+  symbol: string;
+  name: string;
+  current_price: number;
+  currency: string;
+  exchange: string;
+  market_cap: number;
+  sector: string;
+  industry: string;
+  description: string;
+  logo_url: string;
+  website: string;
+  employees: number;
+  city: string;
+  state: string;
+  country: string;
+  phone: string;
+  ceo: string;
+  founded: string;
+  dividend_yield: number;
+  pe_ratio: number;
+  eps: number;
+  beta: number;
+  "52_week_high": number;
+  "52_week_low": number;
+  volume: number;
+  avg_volume: number;
+  market_state: string;
 }
 
 type AvailableStock = {
@@ -148,9 +201,48 @@ export function StocksTab() {
   const [sortBy, setSortBy] = useState('marketCap'); // currently unused
   const [selectedStock, setSelectedStock] = useState<string | null>(null);
   const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
+  const [searchResults, setSearchResults] = useState<YFinanceSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
 
-  // 🔎 Dynamic Polygon search
-  const { results: searchResults, isLoading: searching } = useSymbolsSearch(searchQuery);
+  // 🔎 yfinance search function
+  const searchStocks = async (query: string) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    setSearchError(null);
+
+    try {
+      const response = await fetch(`/api/stocks/yfinance/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        throw new Error('Search failed');
+      }
+      const data = await response.json();
+      setSearchResults([data]); // yfinance search returns single result
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchError('Failed to search stocks');
+      setSearchResults([]);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  // 🔍 Trigger search when query changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchStocks(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 500); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   // 🎯 Exact-match preference: if the user typed a full ticker, show only that result
   const upper = searchQuery.trim().toUpperCase();
@@ -209,16 +301,17 @@ export function StocksTab() {
             </Button>
           </div>
 
-          {/* Results panel (Polygon) */}
+          {/* Results panel (yfinance) */}
           {searchQuery && (
             <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900/50">
               <div className="p-3 border-b border-slate-700 text-slate-400 text-xs">Search Results</div>
               <div className="max-h-64 overflow-auto">
                 {searching && <div className="p-3 text-slate-400 text-sm">Searching…</div>}
-                {!searching && displayResults.length === 0 && (
-                  <div className="p-3 text-slate-400 text-sm">No results</div>
+                {searchError && <div className="p-3 text-red-400 text-sm">{searchError}</div>}
+                {!searching && !searchError && displayResults.length === 0 && (
+                  <div className="p-3 text-slate-400 text-sm">No results found</div>
                 )}
-                {!searching && displayResults.map((r) => (
+                {!searching && !searchError && displayResults.map((r) => (
                   <div
                     key={r.symbol}
                     className="flex items-center justify-between p-3 hover:bg-slate-800/50 cursor-pointer"
@@ -227,9 +320,12 @@ export function StocksTab() {
                       setSelectedStock(r.symbol);
                     }}
                   >
-                    <div>
+                    <div className="flex-1">
                       <div className="text-white font-medium">{r.symbol}</div>
                       <div className="text-slate-400 text-xs">{r.name}</div>
+                      <div className="text-slate-500 text-xs mt-1">
+                        ${r.current_price?.toFixed(2) || 'N/A'} • {r.sector || 'Unknown Sector'}
+                      </div>
                     </div>
                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                       View
