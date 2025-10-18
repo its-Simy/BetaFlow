@@ -205,18 +205,28 @@ export function StocksTab() {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
-  // 🔎 yfinance search function
-  const searchStocks = async (query: string) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  // 📋 Common stock symbols for suggestions
+  const commonStocks = [
+    'A', 'AA', 'AAA', 'AAL', 'AAPL', 'ABBV', 'ABC', 'ABT', 'ACN', 'ADBE', 'ADI', 'ADM', 'ADP', 'ADS', 'ADSK', 'AEE', 'AEP', 'AES', 'AET', 'AFL', 'A', 'AGN', 'AIG', 'AIV', 'AIZ', 'AJG', 'AKAM', 'ALB', 'ALGN', 'ALK', 'ALL', 'ALLE', 'ALXN', 'AMAT', 'AMD', 'AME', 'AMG', 'AMGN', 'AMP', 'AMT', 'AMZN', 'AN', 'ANSS', 'ANTM', 'AON', 'AOS', 'APA', 'APD', 'APH', 'APTV', 'ARE', 'ARNC', 'ATVI', 'AVB', 'AVGO', 'AVY', 'AWK', 'AXP', 'AZO', 'BA', 'BAC', 'BAX', 'BBT', 'BBY', 'BDX', 'BEN', 'BF.B', 'BIIB', 'BK', 'BLK', 'BLL', 'BMY', 'BRK.B', 'BSX', 'BWA', 'BXP', 'C', 'CA', 'CAG', 'CAH', 'CAT', 'CB', 'CBOE', 'CBS', 'CCI', 'CCL', 'CDNS', 'CELG', 'CERN', 'CF', 'CFG', 'CHD', 'CHRW', 'CHTR', 'CI', 'CINF', 'CL', 'CLX', 'CMA', 'CMCSA', 'CME', 'CMG', 'CMI', 'CMS', 'CNC', 'CNP', 'COF', 'COG', 'COL', 'COO', 'COP', 'COST', 'COTY', 'CPB', 'CPRT', 'CRM', 'CSCO', 'CSX', 'CTAS', 'CTL', 'CTSH', 'CTXS', 'CVS', 'CVX', 'CXO', 'D', 'DAL', 'DD', 'DE', 'DFS', 'DG', 'DGX', 'DHI', 'DHR', 'DIS', 'DISCA', 'DISCK', 'DISH', 'DLR', 'DLTR', 'DOV', 'DPS', 'DRE', 'DRI', 'DTE', 'DUK', 'DVA', 'DVN', 'EA', 'EBAY', 'ECL', 'ED', 'EFX', 'EIX', 'EL', 'EMN', 'EMR', 'ENDP', 'EOG', 'EQIX', 'EQR', 'EQT', 'ES', 'ESRX', 'ESS', 'ETFC', 'ETN', 'ETR', 'EVHC', 'EW', 'EXC', 'EXPD', 'EXPE', 'EXR', 'F', 'FAST', 'FB', 'FBHS', 'FCX', 'FDX', 'FE', 'FFIV', 'FIS', 'FISV', 'FITB', 'FL', 'FLIR', 'FLR', 'FLS', 'FMC', 'FOX', 'FOXA', 'FRT', 'FSLR', 'FTI', 'FTV', 'GD', 'GE', 'GGP', 'GILD', 'GIS', 'GLW', 'GM', 'GOOG', 'GOOGL', 'GPC', 'GPN', 'GPS', 'GRMN', 'GS', 'GT', 'GWW', 'HAL', 'HAS', 'HBAN', 'HBI', 'HCA', 'HCP', 'HD', 'HES', 'HIG', 'HOG', 'HOLX', 'HON', 'HP', 'HPE', 'HPQ', 'HRB', 'HRL', 'HRS', 'HSIC', 'HST', 'HSY', 'HUM', 'IBM', 'ICE', 'IDXX', 'IEX', 'IFF', 'ILMN', 'INCY', 'INFO', 'INTC', 'INTU', 'IP', 'IPG', 'IR', 'IRM', 'ISRG', 'IT', 'ITW', 'IVZ', 'JBHT', 'JCI', 'JEC', 'JNJ', 'JNPR', 'JPM', 'JWN', 'K', 'KEY', 'KHC', 'KIM', 'KLAC', 'KMB', 'KMI', 'KMX', 'KO', 'KORS', 'KR', 'KSS', 'KSU', 'L', 'LB', 'LEG', 'LEN', 'LH', 'LKQ', 'LLL', 'LLTC', 'LLY', 'LMT', 'LNC', 'LNT', 'LOW', 'LRCX', 'LUK', 'LUV', 'LVLT', 'LYB', 'M', 'MA', 'MAA', 'MAC', 'MAR', 'MAS', 'MAT', 'MCD', 'MCHP', 'MCK', 'MCO', 'MDLZ', 'MDT', 'MET', 'MHK', 'MKC', 'MLM', 'MMC', 'MMM', 'MNST', 'MO', 'MON', 'MOS', 'MPC', 'MRK', 'MRO', 'MS', 'MSFT', 'MSI', 'MTB', 'MU', 'MUR', 'MYL', 'NAVI', 'NBL', 'NDAQ', 'NEE', 'NEM', 'NFLX', 'NFX', 'NI', 'NKE', 'NLSN', 'NOC', 'NOV', 'NRG', 'NSC', 'NTAP', 'NTRS', 'NUE', 'NVDA', 'NWL', 'NWS', 'NWSA', 'O', 'OKE', 'OMC', 'ORCL', 'ORLY', 'OXY', 'PAYX', 'PBCT', 'PBI', 'PCAR', 'PCG', 'PCLN', 'PDCO', 'PEG', 'PEP', 'PFE', 'PFG', 'PG', 'PGR', 'PH', 'PHM', 'PKI', 'PLD', 'PM', 'PNC', 'PNR', 'PNW', 'POM', 'PPG', 'PPL', 'PRGO', 'PRU', 'PSA', 'PSX', 'PVH', 'PWR', 'PX', 'PXD', 'PYPL', 'QCOM', 'QRVO', 'R', 'RAI', 'RCL', 'REGN', 'RF', 'RHI', 'RHT', 'RIG', 'RL', 'ROK', 'ROP', 'ROST', 'RRC', 'RSG', 'RTN', 'SBUX', 'SCG', 'SCHW', 'SE', 'SEE', 'SHW', 'SIG', 'SIRI', 'SJM', 'SLB', 'SLG', 'SNA', 'SNDK', 'SNI', 'SNPS', 'SO', 'SPG', 'SPLS', 'SRCL', 'SRE', 'STI', 'STJ', 'STT', 'STX', 'STZ', 'SWK', 'SWKS', 'SWN', 'SYF', 'SYY', 'T', 'TAP', 'TDC', 'TE', 'TEL', 'TGT', 'THC', 'TIF', 'TJX', 'TMK', 'TMO', 'TROW', 'TRV', 'TSCO', 'TSN', 'TSS', 'TWX', 'TXN', 'TXT', 'TYC', 'UA', 'UAA', 'UAL', 'UDR', 'UHS', 'ULTA', 'UNH', 'UNM', 'UNP', 'UPS', 'URBN', 'URI', 'USB', 'UTX', 'V', 'VAR', 'VFC', 'VIAB', 'VLO', 'VMC', 'VNO', 'VRSK', 'VRSN', 'VRTX', 'VZ', 'WAT', 'WBA', 'WDC', 'WEC', 'WFC', 'WFM', 'WHR', 'WLTW', 'WM', 'WMB', 'WMT', 'WU', 'WY', 'WYN', 'WYNN', 'X', 'XEL', 'XL', 'XLNX', 'XOM', 'XRAY', 'XRX', 'XYL', 'YHOO', 'YUM', 'ZBH', 'ZION', 'ZTS'
+  ];
 
+  // 🔍 Get stock suggestions based on partial input
+  const getStockSuggestions = (query: string) => {
+    if (!query.trim()) return [];
+    
+    const upperQuery = query.trim().toUpperCase();
+    return commonStocks
+      .filter(symbol => symbol.startsWith(upperQuery))
+      .slice(0, 3); // Show top 3 matches
+  };
+
+  // 🔎 Search for specific stock details
+  const searchStockDetails = async (symbol: string) => {
     setSearching(true);
     setSearchError(null);
 
     try {
-      const response = await fetch(`/api/stocks/yfinance/search?q=${encodeURIComponent(query.trim().toUpperCase())}`);
+      const response = await fetch(`/api/stocks/yfinance/search?q=${encodeURIComponent(symbol)}`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Search failed' }));
         throw new Error(errorData.error || 'Search failed');
@@ -239,26 +249,8 @@ export function StocksTab() {
     }
   };
 
-  // 🔍 Trigger search when query changes (only for valid symbols)
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (searchQuery.trim()) {
-        // Only search if it looks like a valid stock symbol
-        const upper = searchQuery.trim().toUpperCase();
-        const looksLikeSymbol = /^[A-Z]{1,5}$/.test(upper);
-        
-        if (looksLikeSymbol) {
-          searchStocks(searchQuery);
-        } else {
-          setSearchResults([]);
-        }
-      } else {
-        setSearchResults([]);
-      }
-    }, 800); // Longer debounce for better UX
-
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+  // 🔍 Get suggestions as user types
+  const suggestions = getStockSuggestions(searchQuery);
 
   // 🎯 Exact-match preference: if the user typed a full ticker, show only that result
   const upper = searchQuery.trim().toUpperCase();
@@ -275,14 +267,10 @@ export function StocksTab() {
     return matchesSearch && matchesSector;
   });
 
-  // ⌨️ Enter to open chart on the best match
+  // ⌨️ Enter to search for the current query
   const handleEnterToOpen = () => {
-    if (exact) {
-      setActiveSymbol(upper);
-      setSelectedStock(upper);
-    } else if (displayResults[0]) {
-      setActiveSymbol(displayResults[0].symbol);
-      setSelectedStock(displayResults[0].symbol);
+    if (searchQuery.trim()) {
+      searchStockDetails(searchQuery.trim().toUpperCase());
     }
   };
 
@@ -315,7 +303,11 @@ export function StocksTab() {
             </div>
             <Button
               className="searchButton bg-orange-600 hover:bg-orange-700"
-              onClick={handleEnterToOpen}
+              onClick={() => {
+                if (searchQuery.trim()) {
+                  searchStockDetails(searchQuery.trim().toUpperCase());
+                }
+              }}
               disabled={!searchQuery.trim() || searching}
             >
               <span className="mr-2">🔍</span>
@@ -323,8 +315,37 @@ export function StocksTab() {
             </Button>
           </div>
 
-          {/* Results panel (yfinance) */}
-          {searchQuery && (
+          {/* Suggestions panel */}
+          {searchQuery && suggestions.length > 0 && (
+            <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900/50">
+              <div className="p-3 border-b border-slate-700 text-slate-400 text-xs">
+                Suggestions for "{searchQuery}"
+              </div>
+              <div className="max-h-64 overflow-auto">
+                {suggestions.map((symbol) => (
+                  <div
+                    key={symbol}
+                    className="flex items-center justify-between p-3 hover:bg-slate-800/50 cursor-pointer border-b border-slate-700 last:border-b-0"
+                    onClick={() => {
+                      setSearchQuery(symbol);
+                      searchStockDetails(symbol);
+                    }}
+                  >
+                    <div className="flex-1">
+                      <div className="text-white font-bold text-lg">{symbol}</div>
+                      <div className="text-slate-400 text-xs">Click to search for this stock</div>
+                    </div>
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                      Search
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Search results panel */}
+          {searchQuery && searchResults.length > 0 && (
             <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900/50">
               <div className="p-3 border-b border-slate-700 text-slate-400 text-xs">
                 Search Results for "{searchQuery}"
@@ -342,18 +363,7 @@ export function StocksTab() {
                     <div className="text-slate-500 text-xs">Please check the symbol and try again</div>
                   </div>
                 )}
-                {!searching && !searchError && displayResults.length === 0 && searchQuery.length >= 1 && (
-                  <div className="p-4 text-center">
-                    <div className="text-slate-400 text-sm mb-2">No results found for "{searchQuery}"</div>
-                    <div className="text-slate-500 text-xs">Make sure you entered a valid stock symbol</div>
-                  </div>
-                )}
-                {!searching && !searchError && displayResults.length === 0 && searchQuery.length < 1 && (
-                  <div className="p-4 text-center">
-                    <div className="text-slate-400 text-sm">Enter a stock symbol to search</div>
-                  </div>
-                )}
-                {!searching && !searchError && displayResults.map((r) => (
+                {!searching && !searchError && searchResults.map((r) => (
                   <div
                     key={r.symbol}
                     className="flex items-center justify-between p-4 hover:bg-slate-800/50 cursor-pointer border-b border-slate-700 last:border-b-0"
@@ -387,6 +397,16 @@ export function StocksTab() {
             </div>
           )}
 
+          {/* No suggestions found */}
+          {searchQuery && suggestions.length === 0 && searchResults.length === 0 && !searching && (
+            <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900/50">
+              <div className="p-4 text-center">
+                <div className="text-slate-400 text-sm mb-2">No suggestions found for "{searchQuery}"</div>
+                <div className="text-slate-500 text-xs">Try typing a different letter or symbol</div>
+              </div>
+            </div>
+          )}
+
           {/* Popular Stock Suggestions */}
           {!searchQuery && (
             <div className="mb-4">
@@ -399,8 +419,7 @@ export function StocksTab() {
                     size="sm"
                     onClick={() => {
                       setSearchQuery(symbol);
-                      setActiveSymbol(symbol);
-                      setSelectedStock(symbol);
+                      searchStockDetails(symbol);
                     }}
                     className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
                   >
