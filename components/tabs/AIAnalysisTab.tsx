@@ -3,15 +3,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Textarea } from '../ui/textarea';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
+import { Input } from '../ui/input';
+import { apiEndpoints } from '../../lib/apiConfig';
 
 interface AnalysisResult {
-  query: string;
+  query?: string;
+  symbol?: string;
   sentiment: 'bullish' | 'bearish' | 'neutral';
   recommendation: string;
   keyPoints: string[];
   riskLevel: string;
   confidence: number;
   timestamp: string;
+  sources?: Array<{
+    title: string;
+    url: string;
+    publishedAt: string;
+    source: string;
+  }>;
+  cached?: boolean;
 }
 
 const sampleAnalyses: AnalysisResult[] = [
@@ -64,24 +74,83 @@ const sampleAnalyses: AnalysisResult[] = [
 
 export function AIAnalysisTab() {
   const [query, setQuery] = useState('');
+  const [symbol, setSymbol] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentAnalysis, setCurrentAnalysis] = useState<AnalysisResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleAnalyze = async () => {
     if (!query.trim()) return;
     
     setIsAnalyzing(true);
+    setError(null);
     
-    // Simulate AI analysis delay
-    setTimeout(() => {
-      const randomAnalysis = sampleAnalyses[Math.floor(Math.random() * sampleAnalyses.length)];
-      setCurrentAnalysis({
-        ...randomAnalysis,
-        query: query,
-        timestamp: 'Just now'
+    try {
+      const response = await fetch(apiEndpoints.insights.analyze(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query }),
       });
+
+      if (!response.ok) {
+        throw new Error(`Analysis failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      setCurrentAnalysis({
+        query: data.query,
+        sentiment: data.insight.sentiment,
+        recommendation: data.insight.recommendation,
+        keyPoints: data.insight.keyPoints,
+        riskLevel: data.insight.riskLevel,
+        confidence: data.insight.confidence,
+        timestamp: 'Just now',
+        sources: data.sources,
+        cached: data.cached
+      });
+    } catch (error) {
+      console.error('Analysis error:', error);
+      setError(error instanceof Error ? error.message : 'Analysis failed');
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
+  };
+
+  const handleStockAnalyze = async () => {
+    if (!symbol.trim()) return;
+    
+    setIsAnalyzing(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(apiEndpoints.insights.stock(symbol.toUpperCase()));
+
+      if (!response.ok) {
+        throw new Error(`Stock analysis failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      setCurrentAnalysis({
+        symbol: data.symbol,
+        sentiment: data.insight.sentiment,
+        recommendation: data.insight.recommendation,
+        keyPoints: data.insight.keyPoints,
+        riskLevel: data.insight.riskLevel,
+        confidence: data.insight.confidence,
+        timestamp: 'Just now',
+        sources: data.sources,
+        cached: data.cached
+      });
+    } catch (error) {
+      console.error('Stock analysis error:', error);
+      setError(error instanceof Error ? error.message : 'Stock analysis failed');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const getSentimentColor = (sentiment: string) => {
@@ -116,7 +185,47 @@ export function AIAnalysisTab() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Textarea
+            {/* Quick Stock Analysis */}
+            <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-blue-400 text-lg">📊</span>
+                <span className="text-blue-400 font-medium">Quick Stock Analysis</span>
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter stock symbol (e.g., AAPL, NVDA, TSLA)"
+                  value={symbol}
+                  onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+                  className="bg-slate-800/50 border-slate-600 text-white placeholder:text-slate-500"
+                  disabled={isAnalyzing}
+                />
+                <Button
+                  onClick={handleStockAnalyze}
+                  disabled={!symbol.trim() || isAnalyzing}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                      Analyzing...
+                    </>
+                  ) : (
+                    <>
+                      <span className="mr-2">📈</span>
+                      Analyze Stock
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* Free Text Analysis */}
+            <div className="p-4 rounded-lg bg-slate-900/50 border border-slate-700">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-purple-400 text-lg">💬</span>
+                <span className="text-purple-400 font-medium">Free Text Analysis</span>
+              </div>
+              <Textarea
               placeholder="Ask me anything about the financial markets...
 
 Examples:
@@ -154,9 +263,29 @@ Examples:
                 )}
               </Button>
             </div>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Error Display */}
+      {error && (
+        <Card className="bg-red-500/10 border-red-500/20">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-red-400">
+              <span className="text-red-400 text-lg">⚠️</span>
+              <span className="font-medium">Analysis Error</span>
+            </div>
+            <p className="text-red-300 mt-2">{error}</p>
+            <Button 
+              onClick={() => setError(null)}
+              className="mt-3 bg-red-600 hover:bg-red-700"
+            >
+              Dismiss
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Analysis Results */}
       {currentAnalysis && (
@@ -177,7 +306,11 @@ Examples:
               </div>
             </div>
             <CardDescription className="text-slate-400">
-              Confidence: {currentAnalysis.confidence}% | Query: "{currentAnalysis.query}" | {currentAnalysis.timestamp}
+              Confidence: {currentAnalysis.confidence}% | 
+              {currentAnalysis.query && ` Query: "${currentAnalysis.query}"`}
+              {currentAnalysis.symbol && ` Stock: ${currentAnalysis.symbol}`}
+              | {currentAnalysis.timestamp}
+              {currentAnalysis.cached && ' (Cached)'}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -227,6 +360,40 @@ Examples:
                 <p className="text-slate-200">{currentAnalysis.confidence}% confidence based on data quality and market signal strength</p>
               </div>
             </div>
+
+            {/* Sources */}
+            {currentAnalysis.sources && currentAnalysis.sources.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-blue-400 text-lg">📰</span>
+                  <span className="text-blue-400 font-medium">News Sources</span>
+                </div>
+                <div className="space-y-2">
+                  {currentAnalysis.sources.map((source, index) => (
+                    <div key={index} className="p-3 rounded-lg bg-slate-900/50">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="text-white text-sm font-medium mb-1">{source.title}</h4>
+                          <div className="flex items-center gap-2 text-xs text-slate-400">
+                            <span>{source.source}</span>
+                            <span>•</span>
+                            <span>{source.publishedAt}</span>
+                          </div>
+                        </div>
+                        <a 
+                          href={source.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-400 hover:text-blue-300 text-xs"
+                        >
+                          Read →
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-2">

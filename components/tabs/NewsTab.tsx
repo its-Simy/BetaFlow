@@ -11,7 +11,7 @@ type NewsItem = {
   title: string;
   summary: string;
   fullText?:string;
-  source: string;
+  source: string | { name: string };
   timestamp: string;
   category: string;
   sentiment: string;
@@ -35,6 +35,11 @@ export function NewsTab() {
   const [isLoadingSummary, setIsLoadingSummary] = useState(false);
 const [isAudioPlaying, setIsAudioPlaying] = useState(false);
  const [financeOnly, setFinanceOnly] = useState(true);
+
+// Helper function to safely get source name
+const getSourceName = (source: string | { name: string }): string => {
+  return typeof source === 'string' ? source : source.name;
+};
 
 // ADD THESE AUDIO HANDLER FUNCTIONS:
   const handlePlayAudio = () => {
@@ -213,7 +218,7 @@ const keywords = ['finance', 'stock', 'trade', 'bitcoin', 'crypto', 'market', 'n
                   <h3 className="text-white font-medium text-lg mb-2">{newsItem.title}</h3>
                   <p className="text-slate-400 text-sm mb-3">{newsItem.summary}</p>
                   <div className="flex items-center gap-4 text-slate-500 text-sm">
-                    <span>{newsItem.source}</span>
+                    <span>{getSourceName(newsItem.source)}</span>
                     <span>•</span>
                     <span>{newsItem.timestamp}</span>
                     {newsItem.audioAvailable && (
@@ -274,7 +279,7 @@ const keywords = ['finance', 'stock', 'trade', 'bitcoin', 'crypto', 'market', 'n
                 </Button>
               </div>
               <CardDescription className="text-slate-400">
-                {selectedNews.source} • {selectedNews.timestamp} • {selectedNews.readTime}
+                {getSourceName(selectedNews.source)} • {selectedNews.timestamp} • {selectedNews.readTime}
               </CardDescription>
             </CardHeader>
             <CardContent>

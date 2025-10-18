@@ -4,6 +4,7 @@ import cors from "cors";
 import newsRoutes from "./routes/news";
 import audioRoutes from './routes/audio'
 import readNewsRouter from "./routes/readNews";
+import insightsRoutes from "./routes/insights";
 import { findAvailablePort, getPortFromEnv, getFallbackPorts } from "./utils/portUtils";
 
 dotenv.config();
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use('/api/audio', audioRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/readnews", readNewsRouter);
+app.use("/api/insights", insightsRoutes);
 
 // Smart port detection
 const startServer = async () => {

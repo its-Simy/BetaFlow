@@ -29,4 +29,11 @@ export const apiEndpoints = {
   news: () => getApiEndpoint('/api/news'),
   readNews: () => getApiEndpoint('/readnews'),
   audio: () => getApiEndpoint('/api/audio'),
+  insights: {
+    analyze: () => getApiEndpoint('/api/insights/analyze'),
+    stock: (symbol: string) => getApiEndpoint(`/api/insights/stock/${symbol}`),
+    health: () => getApiEndpoint('/api/insights/health'),
+    cacheStats: () => getApiEndpoint('/api/insights/cache/stats'),
+    clearCache: () => getApiEndpoint('/api/insights/cache')
+  }
 };

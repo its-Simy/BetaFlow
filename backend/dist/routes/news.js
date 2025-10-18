@@ -4,11 +4,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const fetchNews_1 = require("../services/fetchNews");
+const newsService_1 = require("../services/newsService");
 const router = express_1.default.Router();
+const newsService = new newsService_1.NewsService();
 router.get("/", async (req, res) => {
     try {
-        const articles = await (0, fetchNews_1.fetchNews)();
+        const articles = await newsService.getTopHeadlines({
+            category: 'business',
+            pageSize: 20
+        });
         res.json({ articles });
     }
     catch (err) {
