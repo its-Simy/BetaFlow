@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -70,7 +70,7 @@ const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 useEffect(() => {
   const fetchNews = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/news");
+      const res = await fetch("http://localhost:5001/api/news");
       const data = await res.json();
       const formatted = data.articles.map((item: any, index: number): NewsItem => ({
         id: index + 1,
