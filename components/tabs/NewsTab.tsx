@@ -5,6 +5,7 @@ import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { AudioPlayer } from '../AudioPlayer';
 import { FinanceToggle } from './FinanceToggle'; // adjust path if needed
+import { apiEndpoints } from '../../lib/apiConfig';
 type NewsItem = {
   id: number;
   title: string;
@@ -70,7 +71,7 @@ setSelectedNews(prev => prev ? { ...prev, fullText: data.fullText } : prev);    
 useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await fetch('http://localhost:5001/api/news');
+        const res = await fetch(apiEndpoints.news());
         const data = await res.json();
 
         const formatted = data.articles.map((item: any, index: number): NewsItem => ({
@@ -113,7 +114,7 @@ useEffect(() => {
     setIsLoadingSummary(true);
 
     try {
-      const response = await fetch("http://localhost:5001/readnews", {
+      const response = await fetch(apiEndpoints.readNews(), {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
