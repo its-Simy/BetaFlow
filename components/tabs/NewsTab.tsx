@@ -64,7 +64,34 @@ const mockNews = [
 
 export function NewsTab() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedNews, setSelectedNews] = useState<typeof mockNews[0] | null>(null);
+
+ const [news, setNews] = useState<NewsItem[]>([]);
+const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
+useEffect(() => {
+  const fetchNews = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/news");
+      const data = await res.json();
+      const formatted = data.articles.map((item: any, index: number): NewsItem => ({
+        id: index + 1,
+        title: item.title,
+        summary: item.description,
+        source: item.source,
+        timestamp: new Date(item.publishedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        category: "General",
+        sentiment: "neutral",
+        readTime: "3 min read",
+        audioAvailable: false,
+      }));
+      setNews(formatted);
+    } catch (err) {
+      console.error("Failed to fetch news:", err);
+    }
+  };
+  fetchNews();
+}, []);
+
+
   const [viewMode, setViewMode] = useState<'read' | 'audio'>('read');
 
   const getSentimentColor = (sentiment: string) => {
