@@ -36,3 +36,4 @@ next-env.d.ts
 
 #api keys
 .env
+backend/node_modules/
