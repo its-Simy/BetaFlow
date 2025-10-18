@@ -1,5 +1,6 @@
 import { Card, CardContent } from './ui/card';
 import { useState, useEffect, useRef } from 'react';
+import { apiEndpoints } from '../lib/apiConfig';
 
 interface AudioPlayerProps {
   title: string;
@@ -32,7 +33,7 @@ export function AudioPlayer({
       
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:5000/api/audio', {
+        const response = await fetch(apiEndpoints.audio(), {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

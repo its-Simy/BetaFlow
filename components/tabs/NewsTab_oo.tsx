@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
+import { apiEndpoints } from '../../lib/apiConfig';
 
 
 
@@ -87,7 +88,7 @@ const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
 useEffect(() => {
   const fetchNews = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/news");
+      const res = await fetch(apiEndpoints.news());
       const data = await res.json();
       const formatted = data.articles.map((item: any, index: number): NewsItem => ({
         id: index + 1,
