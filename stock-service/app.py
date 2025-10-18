@@ -384,6 +384,49 @@ def get_stock_history(symbol):
         period = request.args.get('period', '1mo')  # 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
         interval = request.args.get('interval', '1d')  # 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
         
+        # Check if we have mock data for this symbol
+        if symbol in MOCK_STOCK_DATA:
+            # Generate mock historical data
+            import random
+            from datetime import datetime, timedelta
+            
+            current_price = MOCK_STOCK_DATA[symbol]['current_price']
+            days = 30 if period == '1mo' else 7 if period == '1w' else 1
+            
+            history_data = []
+            base_price = current_price * 0.9  # Start 10% below current price
+            
+            for i in range(days):
+                date = datetime.now() - timedelta(days=days-i-1)
+                
+                # Generate realistic price movement
+                change_percent = random.uniform(-0.05, 0.05)  # ±5% daily change
+                base_price *= (1 + change_percent)
+                
+                open_price = base_price
+                high_price = base_price * random.uniform(1.0, 1.03)
+                low_price = base_price * random.uniform(0.97, 1.0)
+                close_price = base_price * random.uniform(0.98, 1.02)
+                volume = random.randint(1000000, 10000000)
+                
+                history_data.append({
+                    "date": date.strftime('%Y-%m-%d'),
+                    "timestamp": int(date.timestamp() * 1000),  # JavaScript timestamp
+                    "open": round(open_price, 2),
+                    "high": round(high_price, 2),
+                    "low": round(low_price, 2),
+                    "close": round(close_price, 2),
+                    "volume": volume,
+                    "adj_close": round(close_price, 2)
+                })
+            
+            return jsonify({
+                "symbol": symbol,
+                "period": period,
+                "interval": interval,
+                "data": history_data
+            })
+        
         ticker = yf.Ticker(symbol)
         
         # Get historical data
