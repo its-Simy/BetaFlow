@@ -10,7 +10,7 @@ export const LandingPage = ({ onLogin, onSignUp }: LandingPageProps) => {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
       <div className="max-w-4xl mx-auto px-4 text-center">
         {/* Hero Section */}
-        <div className="mb-16">
+        <div className="mb-16 pt-16">
           <h1 className="text-6xl font-bold text-white mb-6">
             BetaFlow
           </h1>
