@@ -172,8 +172,8 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Head>
-        <title>Financial Track - AI-Powered Market Intelligence</title>
-        <meta name="description" content="AI-Powered Financial Analysis Dashboard with Gemini Integration" />
+        <title>BetaFlow - AI-Powered Market Intelligence</title>
+        <meta name="description" content="AI-Powered Financial Analysis Dashboard with Portfolio Management" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -186,7 +186,7 @@ const Home = () => {
                 <span className="text-white text-xl">📊</span>
               </div>
               <div>
-                <h1 className="text-white text-xl font-bold">Financial Track</h1>
+                <h1 className="text-white text-xl font-bold">BetaFlow</h1>
                 <p className="text-slate-400 text-sm">AI-Powered Market Intelligence</p>
               </div>
             </div>
@@ -195,6 +195,12 @@ const Home = () => {
                 <p className="text-slate-400 text-sm">Market Status</p>
                 <p className="text-green-400 text-sm font-medium">● Open</p>
               </div>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>
