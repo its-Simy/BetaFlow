@@ -1,6 +1,7 @@
 import axios from "axios";
 import { NewsArticle } from "../types/NewsArticle";
 import dotenv from "dotenv";
+dotenv.config({ path: "../.env" });
 dotenv.config()
 export const fetchNews = async (): Promise<NewsArticle[]> => {
   const url = "https://newsapi.org/v2/top-headlines";
