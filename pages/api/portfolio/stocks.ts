@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { addStockToPortfolio, getUserStocks, updateStockHolding, removeStockFromPortfolio } from '../../../lib/services/stockService';
-import { verifyAuthToken } from '../../../lib/services/userService';
+import { verifyToken } from '../../../lib/services/userService';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -9,7 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(401).json({ error: 'Authentication required' });
   }
 
-  const userId = await verifyAuthToken(token);
+  const user = await verifyToken(token);
+  const userId = user?.id;
 
   if (!userId) {
     return res.status(401).json({ error: 'Invalid or expired token' });
