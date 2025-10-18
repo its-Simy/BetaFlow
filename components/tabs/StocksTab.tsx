@@ -741,6 +741,9 @@ export function StocksTab() {
       // Check if we got valid data
       if (data && data.symbol) {
         setSearchResults([data]);
+        // Set the active symbol to display the chart
+        setActiveSymbol(data.symbol);
+        setSelectedStock(data.symbol);
       } else {
         throw new Error('Invalid stock symbol');
       }
@@ -767,7 +770,7 @@ export function StocksTab() {
   const filteredStocks = availableStocks.filter(stock => {
     const matchesSearch = !searchQuery ||
       stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      stock.name.toLowerCase().includes(searchQuery.toLowerCase());
+                         stock.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSector = selectedSector === 'All' || stock.sector === selectedSector;
     return matchesSearch && matchesSector;
   });
@@ -793,9 +796,9 @@ export function StocksTab() {
         <CardContent>
           <div className="flex gap-4 mb-4">
             <div className="flex-1">
-              <Input
+            <Input
                 placeholder="Enter stock symbol (e.g., AAPL, GOOGL, TSLA)..."
-                value={searchQuery}
+              value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value.toUpperCase())}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') handleEnterToOpen();
@@ -896,7 +899,15 @@ export function StocksTab() {
                         <span>💰 ${(r.market_cap / 1e9).toFixed(1)}B</span>
                       </div>
                     </div>
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Button 
+                      size="sm" 
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveSymbol(r.symbol);
+                        setSelectedStock(r.symbol);
+                      }}
+                    >
                       View Chart
                     </Button>
                   </div>
@@ -937,7 +948,7 @@ export function StocksTab() {
               </div>
             </div>
           )}
-
+          
           <div className="flex gap-2 flex-wrap">
             {sectors.map((sector) => (
               <Button
@@ -1003,20 +1014,20 @@ export function StocksTab() {
 
       {/* Empty state */}
       {!activeSymbol && (
-        <Card className="bg-slate-800/50 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
               <span className="text-blue-400 text-lg">🏁</span>
               Search a stock to get started
-            </CardTitle>
+          </CardTitle>
             <CardDescription className="text-slate-400">Enter a ticker like AAPL, MSFT, NVDA to view price and chart</CardDescription>
-          </CardHeader>
-          <CardContent>
+        </CardHeader>
+        <CardContent>
             <div className="text-slate-300 text-sm">
               No data loaded yet. Use the search box above and choose a result or press Enter.
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
       )}
 
       {/* Chart */}
