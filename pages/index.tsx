@@ -6,9 +6,9 @@ import { NewsTab } from '../components/tabs/NewsTab';
 import { PortfolioTab } from '../components/tabs/PortfolioTab';
 import { StocksTab } from '../components/tabs/StocksTab';
 import { AIAnalysisTab } from '../components/tabs/AIAnalysisTab';
-import { LandingPage } from '../components/LandingPage';
-import { LoginPage } from '../components/auth/LoginPage';
-import { SignupPage } from '../components/auth/SignupPage';
+import LandingPage from '../components/LandingPage';
+import LoginPage from '../components/auth/LoginPage';
+import SignupPage from '../components/auth/SignupPage';
 
 type AuthState = 'landing' | 'login' | 'signup' | 'authenticated';
 
