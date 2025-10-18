@@ -36,7 +36,7 @@ interface PortfolioTabProps {
   refreshTrigger?: number;
 }
 
-export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
+export function PortfolioTab({ refreshTrigger }: PortfolioTabProps) {
   const [holdings, setHoldings] = useState<StockHolding[]>([]);
   const [portfolioSummary, setPortfolioSummary] = useState<PortfolioSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -140,7 +140,7 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
     return {
       totalValue: `$${(totalValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       totalGain: `${(totalGain ?? 0) >= 0 ? '+' : ''}$${(totalGain ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      totalGainPercent: `${(totalGainPercent ?? 0) >= 0 ? '+' : ''}${(totalGainPercent ?? 0).toFixed(1)}%`,
+      totalGainPercent: `${(totalGainPercent ?? 0) >= 0 ? '+' : ''}${parseFloat((totalGainPercent ?? 0).toString()).toFixed(1)}%`,
       diversificationScore: Math.min(100, Math.max(0, holdings.length * 20)), // Simple diversification score
       riskScore: Math.min(100, Math.max(0, 50 + ((totalGainPercent ?? 0) * 2))) // Simple risk score
     };
@@ -252,59 +252,59 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
 
                 return (
                   <div key={holding.id} className="p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition-colors">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
                         <span className="text-white font-medium text-lg">{holding.stock_symbol}</span>
                         <span className="text-slate-400 text-sm">{holding.stock_name}</span>
-                      </div>
-                      <Button
+                    </div>
+                    <Button
                         onClick={() => removeStock(holding.id)}
-                        variant="outline"
-                        size="sm"
-                        className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-400"
-                      >
-                        <span className="mr-1">🗑️</span>
-                        Remove
-                      </Button>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      <div>
-                        <div className="text-slate-400 text-xs mb-1">Shares</div>
+                      variant="outline"
+                      size="sm"
+                      className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-400"
+                    >
+                      <span className="mr-1">🗑️</span>
+                      Remove
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <div className="text-slate-400 text-xs mb-1">Shares</div>
                         <div className="text-white font-medium">{holding.shares_owned ?? 0}</div>
-                      </div>
-                      <div>
-                        <div className="text-slate-400 text-xs mb-1">Current Price</div>
-                        <div className="text-white font-medium">${(holding.current_price ?? 0).toFixed(2)}</div>
-                      </div>
-                      <div>
-                        <div className="text-slate-400 text-xs mb-1">Buy Price</div>
-                        <div className="text-white font-medium">${(holding.purchase_price ?? 0).toFixed(2)}</div>
-                      </div>
-                      <div>
-                        <div className="text-slate-400 text-xs mb-1">Current Value</div>
-                        <div className="text-white font-medium">${(currentValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-                      </div>
                     </div>
-                    
-                    <div className="mt-3 pt-3 border-t border-slate-700">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                          <div>
-                            <div className="text-slate-400 text-xs mb-1">P&L</div>
+                    <div>
+                      <div className="text-slate-400 text-xs mb-1">Current Price</div>
+                        <div className="text-white font-medium">${parseFloat(holding.current_price?.toString() ?? '0').toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-xs mb-1">Buy Price</div>
+                        <div className="text-white font-medium">${parseFloat(holding.purchase_price?.toString() ?? '0').toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400 text-xs mb-1">Current Value</div>
+                        <div className="text-white font-medium">${(currentValue ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div>
+                          <div className="text-slate-400 text-xs mb-1">P&L</div>
                             <div className={`font-medium ${(profitLoss ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {(profitLoss ?? 0) >= 0 ? '+' : ''}${(profitLoss ?? 0).toFixed(2)}
+                              {(profitLoss ?? 0) >= 0 ? '+' : ''}${parseFloat((profitLoss ?? 0).toString()).toFixed(2)}
                             </div>
                           </div>
                           <div>
                             <div className="text-slate-400 text-xs mb-1">P&L %</div>
                             <div className={`font-medium ${(profitLossPercent ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {(profitLossPercent ?? 0) >= 0 ? '+' : ''}{(profitLossPercent ?? 0).toFixed(1)}%
-                            </div>
+                              {(profitLossPercent ?? 0) >= 0 ? '+' : ''}{parseFloat((profitLossPercent ?? 0).toString()).toFixed(1)}%
                           </div>
-                          <div>
+                        </div>
+                        <div>
                             <div className="text-slate-400 text-xs mb-1">Weight</div>
-                            <div className="text-slate-300 text-sm">{(weight ?? 0).toFixed(1)}%</div>
+                            <div className="text-slate-300 text-sm">{parseFloat((weight ?? 0).toString()).toFixed(1)}%</div>
                           </div>
                         </div>
                         <div className="text-right">
@@ -348,7 +348,12 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
                 <div className="p-4 rounded-lg bg-slate-900/50">
                   <div className="text-slate-400 text-sm mb-1">Average P&L</div>
                   <div className={`text-2xl font-bold ${(portfolioSummary?.total_gain_loss ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {(portfolioSummary?.total_gain_loss ?? 0) >= 0 ? '+' : ''}{((parseFloat((portfolioSummary?.total_invested ?? 0).toString()) > 0 ? (parseFloat((portfolioSummary?.total_gain_loss ?? 0).toString()) / parseFloat((portfolioSummary?.total_invested ?? 1).toString())) * 100 : 0)).toFixed(1)}%
+                    {(() => {
+                      const totalInvested = parseFloat((portfolioSummary?.total_invested ?? 0).toString());
+                      const totalGainLoss = parseFloat((portfolioSummary?.total_gain_loss ?? 0).toString());
+                      const percentage = totalInvested > 0 ? (totalGainLoss / totalInvested) * 100 : 0;
+                      return `${(portfolioSummary?.total_gain_loss ?? 0) >= 0 ? '+' : ''}${parseFloat(percentage.toString()).toFixed(1)}%`;
+                    })()}
                   </div>
                   <div className="text-slate-500 text-xs">Overall performance</div>
                 </div>
@@ -417,7 +422,12 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
                 }
               </div>
               <div className={`text-lg font-bold ${(portfolioSummary?.total_gain_loss ?? 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {(portfolioSummary?.total_gain_loss ?? 0) >= 0 ? '+' : ''}{((parseFloat((portfolioSummary?.total_invested ?? 0).toString()) > 0 ? (parseFloat((portfolioSummary?.total_gain_loss ?? 0).toString()) / parseFloat((portfolioSummary?.total_invested ?? 1).toString())) * 100 : 0)).toFixed(1)}%
+                {(() => {
+                  const totalInvested = parseFloat((portfolioSummary?.total_invested ?? 0).toString());
+                  const totalGainLoss = parseFloat((portfolioSummary?.total_gain_loss ?? 0).toString());
+                  const percentage = totalInvested > 0 ? (totalGainLoss / totalInvested) * 100 : 0;
+                  return `${(portfolioSummary?.total_gain_loss ?? 0) >= 0 ? '+' : ''}${parseFloat(percentage.toString()).toFixed(1)}%`;
+                })()}
               </div>
             </div>
           </div>
@@ -436,9 +446,9 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
         <CardContent>
           <div className="space-y-4">
             {holdings.length === 0 ? (
-              <div className="p-4 rounded-lg bg-slate-900/50">
+            <div className="p-4 rounded-lg bg-slate-900/50">
                 <h4 className="text-white font-medium mb-2">🚀 Getting Started</h4>
-                <p className="text-slate-300 text-sm mb-3">
+              <p className="text-slate-300 text-sm mb-3">
                   Start building your portfolio by searching for stocks in the Stocks tab. Look for companies you believe in and understand their business model.
                 </p>
                 <Button 
@@ -448,7 +458,7 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
                   className="border-slate-600 text-slate-400"
                 >
                   Start Investing
-                </Button>
+              </Button>
               </div>
             ) : (
               <>
@@ -460,14 +470,14 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
                       : `Great! You have ${holdings.length} different stocks. Consider adding stocks from different sectors for better diversification.`
                     }
                   </p>
-                </div>
-                
-                <div className="p-4 rounded-lg bg-slate-900/50">
+            </div>
+            
+            <div className="p-4 rounded-lg bg-slate-900/50">
                   <h4 className="text-white font-medium mb-2">📈 Performance Tracking</h4>
-                  <p className="text-slate-300 text-sm mb-3">
+              <p className="text-slate-300 text-sm mb-3">
                     Monitor your portfolio regularly and consider rebalancing when individual positions become too large relative to your total portfolio.
-                  </p>
-                </div>
+              </p>
+            </div>
               </>
             )}
           </div>

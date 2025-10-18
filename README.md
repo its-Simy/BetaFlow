@@ -1,181 +1,206 @@
-# Financial Track - AI-Powered Market Intelligence Dashboard
+# BetaFlow - AI-Powered Financial Dashboard
 
 A comprehensive financial dashboard built with Next.js 14, TypeScript, and Tailwind CSS. Features portfolio management, real-time market analysis, news integration, and AI-powered insights.
 
-![Financial Track Dashboard](https://via.placeholder.com/800x400/1e293b/ffffff?text=Financial+Track+Dashboard)
-
-## 🚀 Features
-
-### 📊 **Interactive Dashboard**
-- **Summary Tab** - Market overview with trending stocks and AI insights
-- **News Tab** - Financial news with AI-powered search and audio reading
-- **Portfolio Tab** - Complete portfolio management with P&L tracking
-- **Stocks Tab** - Searchable stock database with AI recommendations
-- **AI Analysis Tab** - Gemini AI integration for market analysis
-
-### 💼 **Portfolio Management**
-- ✅ Add/Remove stocks dynamically
-- ✅ Buy price tracking for accurate P&L calculations
-- ✅ Real-time profit/loss monitoring
-- ✅ Portfolio diversification analysis
-- ✅ Risk assessment and metrics
-
-### 🤖 **AI Integration Ready**
-- Gemini AI for market analysis
-- News API integration
-- ElevenLabs audio synthesis
-- Real-time data processing
-
-## 🛠️ Tech Stack
-
-- **Frontend**: Next.js 14, React 18, TypeScript
-- **Styling**: Tailwind CSS, Custom UI Components
-- **Icons**: Lucide React
-- **UI Components**: Radix UI Primitives
-- **Development**: ESLint, PostCSS, Autoprefixer
-
-## 📋 Prerequisites
-
-- Node.js 18.0.0 or higher
-- npm 9.0.0 or higher
-- Git
-
 ## 🚀 Quick Start
 
-### 1. Clone the Repository
+### Prerequisites
+
+- Node.js 18+ 
+- PostgreSQL 15+
+- npm or yarn
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/its-Simy/BetaFlow.git
+   cd BetaFlow
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up PostgreSQL**
+   ```bash
+   # Install PostgreSQL (macOS)
+   brew install postgresql@15
+   brew services start postgresql@15
+   
+   # Or install via your system's package manager
+   ```
+
+4. **Set up the database**
+   ```bash
+   npm run setup-db
+   ```
+
+5. **Configure environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API keys (optional for basic functionality)
+   ```
+
+6. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+
+7. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🗄️ Database Setup
+
+The application uses PostgreSQL for data storage. The setup script will:
+
+- Create the `financial_track` database
+- Set up tables for users and portfolio holdings
+- Add sample data for testing
+
+### Manual Database Setup
+
+If the automated setup doesn't work:
+
 ```bash
-git clone <your-repository-url>
-cd BetaFlow-
+# Create database
+createdb financial_track
+
+# Run schema
+psql financial_track -f database/schema.sql
+
+# Add sample data (optional)
+psql financial_track -f database/seed.sql
 ```
 
-### 2. Install Dependencies
-```bash
-npm install
-```
+## 🎯 Features
 
-### 3. Run Development Server
-```bash
-npm run dev
-```
+### Authentication
+- User registration and login
+- JWT-based authentication
+- Secure password hashing
 
-### 4. Open Your Browser
-Navigate to [http://localhost:3000](http://localhost:3000)
+### Portfolio Management
+- Add stocks to your portfolio
+- Track current prices and performance
+- View profit/loss calculations
+- Remove holdings
 
-## 📁 Project Structure
+### Market Analysis
+- Real-time stock data via yfinance
+- Interactive price charts
+- Stock search with suggestions
+- Company information and metrics
+
+### AI Integration
+- AI-powered portfolio analysis
+- Market insights and recommendations
+- News sentiment analysis
+
+## 🛠️ Development
+
+### Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run setup-db` - Set up database
+- `npm run reset-db` - Reset database with fresh data
+
+### Project Structure
 
 ```
 ├── components/          # React components
-│   ├── tabs/           # Dashboard tab components
-│   │   ├── SummaryTab.tsx
-│   │   ├── NewsTab.tsx
-│   │   ├── PortfolioTab.tsx
-│   │   ├── StocksTab.tsx
-│   │   └── AIAnalysisTab.tsx
+│   ├── auth/           # Authentication components
+│   ├── tabs/           # Main dashboard tabs
 │   └── ui/             # Reusable UI components
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── tabs.tsx
-│       └── ...
-├── pages/              # Next.js pages
-│   ├── _app.tsx
-│   └── index.tsx
-├── styles/             # Global CSS and Tailwind
-│   └── globals.css
-├── backend/            # Backend structure (ready for API development)
-├── lib/                # Utility functions
-└── public/             # Static assets
+├── pages/              # Next.js pages and API routes
+│   ├── api/            # Backend API endpoints
+│   └── index.tsx       # Main dashboard page
+├── database/           # Database schema and setup
+├── lib/                # Utility functions and services
+├── scripts/            # Setup and utility scripts
+└── stock-service/      # Python microservice for stock data
 ```
 
-## 🔧 Available Scripts
+## 🔧 Configuration
 
-```bash
-# Development
-npm run dev          # Start development server
+### Environment Variables
 
-# Production
-npm run build        # Build for production
-npm start           # Start production server
-
-# Code Quality
-npm run lint        # Run ESLint
-```
-
-## 🌐 Environment Variables
-
-Create a `.env.local` file for API integrations:
+Create a `.env` file in the root directory:
 
 ```env
-# Gemini AI API
-GEMINI_API_KEY=your_gemini_api_key
+# Database Configuration
+DATABASE_URL="postgresql://username@localhost:5432/financial_track"
 
-# News API
-NEWS_API_KEY=your_news_api_key
+# JWT Secret (required)
+JWT_SECRET="your-super-secret-jwt-key-here"
 
-# ElevenLabs API
-ELEVENLABS_API_KEY=your_elevenlabs_api_key
+# API Keys (optional - app works without them)
+POLYGON_API_KEY=your_polygon_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+NEWS_API_KEY=your_news_api_key_here
+ELEVEN_API_KEY=your_elevenlabs_api_key_here
+
+# Backend Configuration
+BACKEND_PORT=5001
+FALLBACK_PORTS=5002,5003,5004,5005
+NODE_ENV=development
 ```
 
-## 📊 Key Features
+### API Keys (Optional)
 
-### Portfolio Management
-- **Dynamic Stock Addition**: Add stocks with buy prices and share quantities
-- **Real-time P&L**: Track profit/loss based on your actual purchase prices
-- **Portfolio Analytics**: Diversification scores, risk metrics, and sector allocation
-- **Position Management**: Remove positions you no longer hold
+The application works without API keys, but you can add them for enhanced functionality:
 
-### Market Analysis
-- **Trending Stocks**: Real-time market movers and trending tickers
-- **AI Insights**: Gemini-powered market analysis and recommendations
-- **Risk Assessment**: Portfolio risk metrics and correlation analysis
-- **Sector Allocation**: Visual breakdown of portfolio diversification
+- **POLYGON_API_KEY**: For additional market data
+- **GEMINI_API_KEY**: For AI-powered insights
+- **NEWS_API_KEY**: For financial news
+- **ELEVEN_API_KEY**: For text-to-speech features
 
-### News Integration
-- **Financial News**: Curated financial news with AI-powered search
-- **Audio Reading**: ElevenLabs integration for news audio synthesis
-- **Market Sentiment**: AI analysis of market sentiment and trends
+## 🐛 Troubleshooting
 
-## 🎨 UI/UX Features
+### Common Issues
 
-- **Dark Theme**: Modern dark interface with gradient accents
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
-- **Interactive Elements**: Smooth animations and hover effects
-- **Color-coded Data**: Green/red indicators for gains/losses
-- **Accessible Design**: WCAG compliant with proper contrast ratios
+1. **Database connection failed**
+   - Ensure PostgreSQL is running: `brew services start postgresql@15`
+   - Check your `DATABASE_URL` in `.env`
+   - Run `npm run setup-db`
 
-## 🔮 Future Enhancements
+2. **Port already in use**
+   - The app will automatically try ports 3001, 3002, etc.
+   - Or kill the process: `lsof -ti:3000 | xargs kill -9`
 
-- [ ] Real-time stock price APIs
-- [ ] User authentication and portfolio persistence
-- [ ] Advanced charting and technical analysis
-- [ ] Options trading integration
-- [ ] Social trading features
-- [ ] Mobile app development
+3. **Module not found errors**
+   - Delete `node_modules` and run `npm install`
+   - Clear Next.js cache: `rm -rf .next`
+
+4. **TypeScript compilation errors**
+   - Run `npx tsc --noEmit` to check for type errors
+   - Ensure all dependencies are installed
+
+### Getting Help
+
+- Check the [Issues](https://github.com/its-Simy/BetaFlow/issues) page
+- Review the troubleshooting section above
+- Ensure all prerequisites are installed
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m 'Add amazing feature'`
+4. Push to the branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-## 📄 License
+## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- 📧 Email: [your-email@example.com]
-- 🐛 Issues: [GitHub Issues](https://github.com/your-username/BetaFlow-/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/your-username/BetaFlow-/discussions)
+This project is licensed under the ISC License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
-- [Next.js](https://nextjs.org/) - The React framework
-- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
-- [Radix UI](https://www.radix-ui.com/) - UI primitives
-- [Lucide](https://lucide.dev/) - Icon library
-
----
-
-**Built with ❤️ for the financial community**
+- Built with [Next.js](https://nextjs.org/)
+- Styled with [Tailwind CSS](https://tailwindcss.com/)
+- UI components from [Radix UI](https://www.radix-ui.com/)
+- Charts powered by [Recharts](https://recharts.org/)
+- Stock data from [yfinance](https://github.com/ranaroussi/yfinance)

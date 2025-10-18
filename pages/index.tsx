@@ -151,7 +151,7 @@ const Home = () => {
         onSwitchToSignup={handleSwitchToSignup}
         onBackToLanding={handleBackToLanding}
         error={authError}
-        isLoading={isLoading}
+        loading={isLoading}
       />
     );
   }
@@ -163,7 +163,7 @@ const Home = () => {
         onSwitchToLogin={handleSwitchToLogin}
         onBackToLanding={handleBackToLanding}
         error={authError}
-        isLoading={isLoading}
+        loading={isLoading}
       />
     );
   }
