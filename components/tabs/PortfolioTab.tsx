@@ -132,9 +132,17 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
       };
     }
 
-    const totalValue = parseFloat(portfolioSummary.total_value.toString());
-    const totalGain = parseFloat(portfolioSummary.total_gain_loss.toString());
-    const totalInvested = parseFloat(portfolioSummary.total_invested.toString());
+    // Handle both string and number values from the API
+    const totalValue = typeof portfolioSummary.total_value === 'string' 
+      ? parseFloat(portfolioSummary.total_value) 
+      : portfolioSummary.total_value;
+    const totalGain = typeof portfolioSummary.total_gain_loss === 'string' 
+      ? parseFloat(portfolioSummary.total_gain_loss) 
+      : portfolioSummary.total_gain_loss;
+    const totalInvested = typeof portfolioSummary.total_invested === 'string' 
+      ? parseFloat(portfolioSummary.total_invested) 
+      : portfolioSummary.total_invested;
+    
     const totalGainPercent = totalInvested > 0 ? (totalGain / totalInvested) * 100 : 0;
 
     return {
@@ -247,7 +255,9 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
                 const purchaseValue = (holding.shares_owned ?? 0) * (holding.purchase_price ?? 0);
                 const profitLoss = currentValue - purchaseValue;
                 const profitLossPercent = purchaseValue > 0 ? (profitLoss / purchaseValue) * 100 : 0;
-                const totalValue = parseFloat((portfolioSummary?.total_value ?? 0).toString());
+                const totalValue = typeof portfolioSummary?.total_value === 'string' 
+                  ? parseFloat(portfolioSummary.total_value) 
+                  : (portfolioSummary?.total_value ?? 0);
                 const weight = totalValue > 0 ? (currentValue / totalValue) * 100 : 0;
 
                 return (
