@@ -96,3 +96,21 @@
   }
 }
 
+.searchButton{
+background-color: white;
+}
+.searchButton:hover{
+background-color: wheat!important;
+}
+.searchButton:focus{
+background-color: skyblue!important;
+}
+.tabsButton:hover{
+  background-color: rgb(40, 82, 93);
+}
+.tabsButton:focus{
+    background-color: rgb(99, 198, 223);
+}
+.searchNewsCard{
+  display: none!important;
+}
