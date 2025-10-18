@@ -6,9 +6,9 @@ import { NewsTab } from '../components/tabs/NewsTab';
 import { PortfolioTab } from '../components/tabs/PortfolioTab';
 import { StocksTab } from '../components/tabs/StocksTab';
 import { AIAnalysisTab } from '../components/tabs/AIAnalysisTab';
-import { LandingPage } from '../components/LandingPage';
-import { LoginPage } from '../components/auth/LoginPage';
-import { SignupPage } from '../components/auth/SignupPage';
+import LandingPage from '../components/LandingPage';
+import LoginPage from '../components/auth/LoginPage';
+import SignupPage from '../components/auth/SignupPage';
 
 type AuthState = 'landing' | 'login' | 'signup' | 'authenticated';
 
@@ -82,16 +82,11 @@ const Home = () => {
     }
   };
 
-  const handleSignup = async (name: string, email: string, password: string) => {
+  const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
     setIsLoading(true);
     setAuthError('');
     
     try {
-      // Split name into first and last name
-      const nameParts = name.trim().split(' ');
-      const first_name = nameParts[0];
-      const last_name = nameParts.slice(1).join(' ') || '';
-
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
@@ -100,8 +95,8 @@ const Home = () => {
         body: JSON.stringify({ 
           email, 
           password, 
-          first_name, 
-          last_name 
+          first_name: firstName, 
+          last_name: lastName 
         }),
       });
 
@@ -177,8 +172,8 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Head>
-        <title>Financial Track - AI-Powered Market Intelligence</title>
-        <meta name="description" content="AI-Powered Financial Analysis Dashboard with Gemini Integration" />
+        <title>BetaFlow - AI-Powered Market Intelligence</title>
+        <meta name="description" content="AI-Powered Financial Analysis Dashboard with Portfolio Management" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -191,7 +186,7 @@ const Home = () => {
                 <span className="text-white text-xl">📊</span>
               </div>
               <div>
-                <h1 className="text-white text-xl font-bold">Financial Track</h1>
+                <h1 className="text-white text-xl font-bold">BetaFlow</h1>
                 <p className="text-slate-400 text-sm">AI-Powered Market Intelligence</p>
               </div>
             </div>
@@ -200,6 +195,12 @@ const Home = () => {
                 <p className="text-slate-400 text-sm">Market Status</p>
                 <p className="text-green-400 text-sm font-medium">● Open</p>
               </div>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg transition-colors"
+              >
+                Logout
+              </button>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import * as bcrypt from 'bcryptjs';
+import * as jwt from 'jsonwebtoken';
 import { query } from '../database';
 
 export interface User {
@@ -113,6 +113,39 @@ export async function verifyToken(token: string): Promise<User | null> {
     return await findUserById(decoded.userId);
   } catch (error) {
     return null;
+  }
+}
+
+// Register user (wrapper for createUser with validation)
+export async function registerUser(email: string, password: string, first_name: string, last_name: string = ''): Promise<{ success: boolean; user?: User; error?: string }> {
+  try {
+    // Check if user already exists
+    const existingUser = await findUserByEmail(email);
+    if (existingUser) {
+      return { success: false, error: 'User with this email already exists' };
+    }
+
+    // Create new user
+    const user = await createUser({ email, password, first_name, last_name });
+    return { success: true, user };
+  } catch (error) {
+    console.error('Registration error:', error);
+    return { success: false, error: 'Failed to create user account' };
+  }
+}
+
+// Login user (wrapper for authenticateUser)
+export async function loginUser(email: string, password: string): Promise<{ success: boolean; user?: User; token?: string; error?: string }> {
+  try {
+    const result = await authenticateUser({ email, password });
+    if (result) {
+      return { success: true, user: result.user, token: result.token };
+    } else {
+      return { success: false, error: 'Invalid email or password' };
+    }
+  } catch (error) {
+    console.error('Login error:', error);
+    return { success: false, error: 'Login failed' };
   }
 }
 
