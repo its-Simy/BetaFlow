@@ -34,6 +34,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-#api keys
+# API keys
 .env
-backend/node_modules/
+

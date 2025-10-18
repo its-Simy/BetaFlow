@@ -201,7 +201,7 @@ export function StocksTab() {
               className="flex-1 bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
             />
             <Button
-              className="bg-orange-600 hover:bg-orange-700"
+              className=" searchButton bg-orange-600 hover:bg-orange-700"
               onClick={handleEnterToOpen}
             >
               <span className="mr-2">🔍</span>

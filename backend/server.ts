@@ -2,20 +2,16 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import newsRoutes from "./routes/news";
-import { Request, Response } from "express";
+import audioRoutes from './routes/audio'
+import readNewsRouter from "./routes/readNews";
 
 dotenv.config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-app.get("/", (req: Request, res: Response) => {
-    console.log("Hello World");
-  res.send("Hello World");
-});
-
+app.use('/api/audio', audioRoutes);
 app.use("/api/news", newsRoutes);
-
-const PORT = process.env.PORT || 5001;
+app.use("/readnews", readNewsRouter);
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
