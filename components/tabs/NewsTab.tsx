@@ -70,7 +70,7 @@ setSelectedNews(prev => prev ? { ...prev, fullText: data.fullText } : prev);    
 useEffect(() => {
     const fetchNews = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/news');
+        const res = await fetch('http://localhost:5001/api/news');
         const data = await res.json();
 
         const formatted = data.articles.map((item: any, index: number): NewsItem => ({
@@ -113,7 +113,7 @@ useEffect(() => {
     setIsLoadingSummary(true);
 
     try {
-      const response = await fetch("http://localhost:5000/readnews", {
+      const response = await fetch("http://localhost:5001/readnews", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
