@@ -33,13 +33,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return res.status(400).json({ error: 'Missing required stock data' });
         }
 
-        const result = await addStockToPortfolio(userId, stock_symbol, stock_name, shares_owned, purchase_price, current_price);
+        const stock = await addStockToPortfolio({
+          user_id: userId,
+          stock_symbol,
+          stock_name,
+          shares_owned,
+          purchase_price,
+          current_price
+        });
 
-        if (result.success && result.stock) {
-          return res.status(201).json({ message: 'Stock added to portfolio', stock: result.stock });
-        } else {
-          return res.status(500).json({ error: result.error || 'Failed to add stock' });
-        }
+        return res.status(201).json({ message: 'Stock added to portfolio', stock });
       } catch (error) {
         console.error('POST /api/portfolio/stocks error:', error);
         return res.status(500).json({ error: 'Internal server error' });

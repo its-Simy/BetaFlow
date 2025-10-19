@@ -13,7 +13,9 @@ const voiceMap: Record<string, string> = {
   // Add more voices if needed
 };
 export async function generateAudio(text: string, voiceName = "Rachel") {
-  const voiceId = voiceMap[voiceName] || ELEVEN_VOICE_ID;  try {
+  const voiceId = voiceMap[voiceName] || ELEVEN_VOICE_ID;
+  
+  try {
     console.log("Generating audio for text:", text.substring(0, 100) + "...");
     console.log("Using API Key:", ELEVEN_API_KEY ? "Present" : "Missing");
     console.log("Using Voice ID:", voiceId);

@@ -164,6 +164,9 @@ const Home = () => {
           <TabsContent value="summary">
             <SummaryTab />
           </TabsContent>
+          <TabsContent value="news">
+            <NewsTab />
+          </TabsContent>
           <TabsContent value="portfolio">
             <PortfolioTabComponent refreshTrigger={portfolioRefreshTrigger} />
           </TabsContent>
