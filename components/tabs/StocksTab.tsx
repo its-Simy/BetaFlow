@@ -45,12 +45,30 @@ function formatSignedPercent(value: number): string {
   return '0.0%';
 }
 
+// Helper functions for data source indicators
+function getSourceColor(source: string) {
+  switch (source) {
+    case 'polygon': return 'text-blue-400 bg-blue-900/30';
+    case 'static': return 'text-orange-400 bg-orange-900/30';
+    default: return 'text-gray-400 bg-gray-900/30';
+  }
+}
+
+function getSourceIcon(source: string) {
+  switch (source) {
+    case 'polygon': return '📡';
+    case 'static': return '📋';
+    default: return '❓';
+  }
+}
+
 // --- Optional row component kept for future list usage ---
 function StockRow({
   stock, selectedStock, setSelectedStock
 }: { stock: AvailableStock; selectedStock: string | null; setSelectedStock: (s: string | null) => void; }) {
   const [apiData, setApiData] = useState<ApiStockData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [dataSource, setDataSource] = useState<string>('unknown');
 
   useEffect(() => {
     let isMounted = true;
@@ -60,7 +78,10 @@ function StockRow({
         const res = await fetch(`/api/stocks/${stock.symbol}`);
         if (!res.ok) throw new Error(`Failed: ${res.status}`);
         const data: ApiStockData = await res.json();
-        if (isMounted) setApiData(data);
+        if (isMounted) {
+          setApiData(data);
+          setDataSource((data as any).source || 'unknown');
+        }
       } catch {
         if (isMounted) setApiData(null);
       } finally {
@@ -79,6 +100,7 @@ function StockRow({
 
   const sentimentLabel = change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral';
   const sentimentClass = getSentimentColor(sentimentLabel);
+
 
   return (
     <div className="flex items-center justify-between p-4 rounded-lg bg-slate-900/50 hover:bg-slate-900 transition-colors">
@@ -106,6 +128,12 @@ function StockRow({
         <div className="text-right">
           <Badge className={getRecommendationColor(stock.recommendation)}>{stock.recommendation}</Badge>
           <Badge className={sentimentClass}>{sentimentLabel}</Badge>
+          <div className="flex items-center gap-1 mt-1">
+            <span className="text-xs text-slate-500">Data:</span>
+            <Badge className={`text-xs px-2 py-0.5 ${getSourceColor(dataSource)}`}>
+              {getSourceIcon(dataSource)} {dataSource}
+            </Badge>
+          </div>
           <p className="text-slate-500 text-xs mt-1">{stock.marketCap}</p>
         </div>
         <div className="flex flex-col gap-2">
@@ -149,8 +177,17 @@ export function StocksTab() {
   const [selectedStock, setSelectedStock] = useState<string | null>(null);
   const [activeSymbol, setActiveSymbol] = useState<string | null>(null);
 
-  // 🔎 Dynamic Polygon search
-  const { results: searchResults, isLoading: searching } = useSymbolsSearch(searchQuery);
+  // 🔎 Multi-source search with comprehensive fallbacks
+  const { results: apiSearchResults, isLoading: searching, isError } = useSymbolsSearch(searchQuery);
+  
+  // Fallback search using static data when API fails
+  const fallbackSearchResults = searchQuery ? availableStocks.filter(stock => 
+    stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    stock.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ).map(stock => ({ symbol: stock.symbol, name: stock.name, source: 'static' })) : [];
+  
+  // Use API results if available, otherwise use fallback
+  const searchResults = isError || !apiSearchResults.length ? fallbackSearchResults : apiSearchResults;
 
   // 🎯 Exact-match preference: if the user typed a full ticker, show only that result
   const upper = searchQuery.trim().toUpperCase();
@@ -162,7 +199,7 @@ export function StocksTab() {
   const filteredStocks = availableStocks.filter(stock => {
     const matchesSearch = !searchQuery ||
       stock.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      stock.name.toLowerCase().includes(searchQuery.toLowerCase());
+                         stock.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesSector = selectedSector === 'All' || stock.sector === selectedSector;
     return matchesSearch && matchesSector;
   });
@@ -209,10 +246,12 @@ export function StocksTab() {
             </Button>
           </div>
 
-          {/* Results panel (Polygon) */}
+          {/* Results panel */}
           {searchQuery && (
             <div className="mb-4 rounded-lg border border-slate-700 bg-slate-900/50">
-              <div className="p-3 border-b border-slate-700 text-slate-400 text-xs">Search Results</div>
+              <div className="p-3 border-b border-slate-700 text-slate-400 text-xs">
+                Search Results {isError && <span className="text-yellow-400">(using local data)</span>}
+              </div>
               <div className="max-h-64 overflow-auto">
                 {searching && <div className="p-3 text-slate-400 text-sm">Searching…</div>}
                 {!searching && displayResults.length === 0 && (
@@ -230,6 +269,13 @@ export function StocksTab() {
                     <div>
                       <div className="text-white font-medium">{r.symbol}</div>
                       <div className="text-slate-400 text-xs">{r.name}</div>
+                      {(r as any).source && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <Badge className={`text-xs px-2 py-0.5 ${getSourceColor((r as any).source)}`}>
+                            {getSourceIcon((r as any).source)} {(r as any).source}
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                     <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                       View
@@ -239,7 +285,7 @@ export function StocksTab() {
               </div>
             </div>
           )}
-
+          
           <div className="flex gap-2 flex-wrap">
             {sectors.map((sector) => (
               <Button
@@ -305,20 +351,20 @@ export function StocksTab() {
 
       {/* Empty state */}
       {!activeSymbol && (
-        <Card className="bg-slate-800/50 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
+      <Card className="bg-slate-800/50 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
               <span className="text-blue-400 text-lg">🏁</span>
               Search a stock to get started
-            </CardTitle>
+          </CardTitle>
             <CardDescription className="text-slate-400">Enter a ticker like AAPL, MSFT, NVDA to view price and chart</CardDescription>
-          </CardHeader>
-          <CardContent>
+        </CardHeader>
+        <CardContent>
             <div className="text-slate-300 text-sm">
               No data loaded yet. Use the search box above and choose a result or press Enter.
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
       )}
 
       {/* Chart */}

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Button } from './button';
+import { Input } from './input';
+import { Card, CardContent, CardHeader, CardTitle } from './card';
 
 interface StockData {
   symbol: string;
@@ -29,6 +32,12 @@ export default function StockChart({ symbol }: StockChartProps) {
   const [data, setData] = useState<StockData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Add to Portfolio form state
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [shares, setShares] = useState('');
+  const [purchasePrice, setPurchasePrice] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
 
   useEffect(() => {
     fetchStockData();
@@ -59,6 +68,67 @@ export default function StockChart({ symbol }: StockChartProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Form reset function
+  const resetForm = () => {
+    setShares('');
+    setPurchasePrice('');
+    setShowAddForm(false);
+    setIsAdding(false);
+  };
+
+  // Real API handlers
+  const handleAddToPortfolio = async () => {
+    if (!shares || !purchasePrice) {
+      alert('Please fill in both fields');
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Please log in to add stocks to your portfolio');
+        return;
+      }
+
+      // Get stock name from the data if available
+      const stockName = data?.symbol || symbol;
+      
+      const response = await fetch('/api/portfolio/stocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          stock_symbol: symbol,
+          stock_name: stockName,
+          shares_owned: parseFloat(shares),
+          purchase_price: parseFloat(purchasePrice),
+          current_price: currentPrice
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add stock to portfolio');
+      }
+
+      const result = await response.json();
+      alert(`Stock added successfully!\n${shares} shares of ${symbol} at $${purchasePrice} per share`);
+      resetForm();
+    } catch (error) {
+      console.error('Error adding stock to portfolio:', error);
+      alert(`Error: ${error instanceof Error ? error.message : 'Failed to add stock to portfolio'}`);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleCancel = () => {
+    resetForm();
   };
 
   if (loading) {
@@ -179,6 +249,80 @@ export default function StockChart({ symbol }: StockChartProps) {
             <span className="text-white ml-2 font-medium">{data.current.v.toLocaleString()}</span>
           </div>
         </div>
+      )}
+
+      {/* Add to Portfolio Button */}
+      <div className="mt-6">
+        <Button
+          onClick={() => setShowAddForm(true)}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+        >
+          <span className="mr-2">+</span>
+          Add to Portfolio
+        </Button>
+      </div>
+
+      {/* Add to Portfolio Form */}
+      {showAddForm && (
+        <Card className="mt-4 bg-slate-800/50 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white">Add to Your Portfolio</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">
+                Number of Shares
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="e.g., 10"
+                value={shares}
+                onChange={(e) => setShares(e.target.value)}
+                className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-slate-400 text-sm mb-2">
+                Purchase Price per Share
+              </label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0.01"
+                placeholder="e.g., 150.00"
+                value={purchasePrice}
+                onChange={(e) => setPurchasePrice(e.target.value)}
+                className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
+              />
+              {currentPrice > 0 && (
+                <p className="text-slate-500 text-xs mt-1">
+                  Current price: ${currentPrice.toFixed(2)}
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-3">
+              <Button
+                onClick={handleAddToPortfolio}
+                disabled={isAdding}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAdding ? 'Adding...' : 'Add to Portfolio'}
+              </Button>
+              <Button
+                onClick={handleCancel}
+                disabled={isAdding}
+                variant="outline"
+                className="border-slate-600 text-slate-400 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

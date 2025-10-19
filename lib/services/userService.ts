@@ -59,12 +59,18 @@ export async function findUserByEmail(email: string): Promise<User | null> {
 
 // Find user by ID
 export async function findUserById(id: number): Promise<User | null> {
-  const result = await query(
-    'SELECT id, email, first_name, last_name, created_at, updated_at FROM users WHERE id = $1',
-    [id]
-  );
-  
-  return result.rows[0] || null;
+  try {
+    console.log('Looking up user by ID:', id);
+    const result = await query(
+      'SELECT id, email, first_name, last_name, created_at, updated_at FROM users WHERE id = $1',
+      [id]
+    );
+    console.log('Database query result:', result.rows.length, 'rows');
+    return result.rows[0] || null;
+  } catch (error) {
+    console.error('Database query error in findUserById:', error);
+    return null;
+  }
 }
 
 // Get user with password hash for authentication
@@ -109,9 +115,14 @@ export async function authenticateUser(loginData: LoginData): Promise<AuthResult
 // Verify JWT token
 export async function verifyToken(token: string): Promise<User | null> {
   try {
+    console.log('Verifying JWT token...');
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
-    return await findUserById(decoded.userId);
+    console.log('JWT decoded successfully:', { userId: decoded.userId, email: decoded.email });
+    const user = await findUserById(decoded.userId);
+    console.log('User lookup result:', user ? `Found user ${user.id}` : 'User not found');
+    return user;
   } catch (error) {
+    console.error('Token verification error:', error);
     return null;
   }
 }

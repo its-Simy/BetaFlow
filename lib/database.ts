@@ -20,3 +20,8 @@ export const disconnectDb = async () => {
   await pool.end();
   console.log('Disconnected from PostgreSQL database');
 };
+
+// Test connection on startup
+pool.query('SELECT NOW()')
+  .then(() => console.log('Database pool connected successfully'))
+  .catch(err => console.error('Database pool connection failed:', err));

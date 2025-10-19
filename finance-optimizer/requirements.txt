@@ -1,0 +1,10 @@
+Flask==3.0.0
+Flask-Cors==4.0.0
+finnhub-python==2.4.19
+pandas==2.1.4
+numpy==1.26.2
+python-dotenv==1.0.0
+requests>=2.32.2
+yfinance>=0.2.0
+psycopg2-binary>=2.9.0
+
