@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { useState } from 'react';
-=======
 import { useState, useEffect } from 'react';
->>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
 import Head from 'next/head';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { SummaryTab } from '../components/tabs/SummaryTab';
@@ -10,87 +6,61 @@ import { NewsTab } from '../components/tabs/NewsTab';
 import { PortfolioTab } from '../components/tabs/PortfolioTab';
 import { StocksTab } from '../components/tabs/StocksTab';
 import { AIAnalysisTab } from '../components/tabs/AIAnalysisTab';
-<<<<<<< HEAD
-
-const Home = () => {
-  const [activeTab, setActiveTab] = useState('summary');
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      <Head>
-        <title>Financial Track - AI-Powered Market Intelligence</title>
-        <meta name="description" content="AI-Powered Financial Analysis Dashboard with Gemini Integration" />
-=======
 import LandingPage from '../components/LandingPage';
 import LoginPage from '../components/auth/LoginPage';
 import SignupPage from '../components/auth/SignupPage';
 
+// Temporary alias to bypass JSX IntrinsicAttributes typing until PortfolioTab is typed to accept props
+const PortfolioTabComponent: any = PortfolioTab;
+
 type AuthState = 'landing' | 'login' | 'signup' | 'authenticated';
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState('summary');
+  const [activeTab, setActiveTab] = useState<string>('summary');
   const [authState, setAuthState] = useState<AuthState>('landing');
   const [authError, setAuthError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [portfolioRefreshTrigger, setPortfolioRefreshTrigger] = useState(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [portfolioRefreshTrigger, setPortfolioRefreshTrigger] = useState<number>(0);
 
-  // Check for existing authentication on page load
   useEffect(() => {
     const token = localStorage.getItem('token');
     const user = localStorage.getItem('user');
-    
+
     if (token && user) {
-      // Verify token is still valid by making a test request
       fetch('/api/portfolio/summary', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        headers: { 'Authorization': `Bearer ${token}` },
       })
-      .then(response => {
-        if (response.ok) {
-          setAuthState('authenticated');
-        } else {
-          // Token is invalid, clear storage
+        .then(res => {
+          if (res.ok) setAuthState('authenticated');
+          else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+          }
+        })
+        .catch(() => {
           localStorage.removeItem('token');
           localStorage.removeItem('user');
-        }
-      })
-      .catch(() => {
-        // Network error, clear storage
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      });
+        });
     }
   }, []);
 
   const handleLogin = async (email: string, password: string) => {
     setIsLoading(true);
     setAuthError('');
-    
     try {
-      const response = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store user data and token in localStorage
+      const data = await res.json();
+      if (res.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.token);
         setAuthState('authenticated');
-        setAuthError('');
-        // Trigger portfolio refresh
         setPortfolioRefreshTrigger(prev => prev + 1);
-      } else {
-        setAuthError(data.error || 'Login failed');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
+      } else setAuthError(data.error || 'Login failed');
+    } catch {
       setAuthError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -100,31 +70,16 @@ const Home = () => {
   const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
     setIsLoading(true);
     setAuthError('');
-    
     try {
-      const response = await fetch('/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email, 
-          password, 
-          first_name: firstName, 
-          last_name: lastName 
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, first_name: firstName, last_name: lastName }),
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Account created successfully, now log them in
-        await handleLogin(email, password);
-      } else {
-        setAuthError(data.error || 'Failed to create account');
-      }
-    } catch (error) {
-      console.error('Signup error:', error);
+      const data = await res.json();
+      if (res.ok) await handleLogin(email, password);
+      else setAuthError(data.error || 'Failed to create account');
+    } catch {
       setAuthError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
@@ -132,104 +87,60 @@ const Home = () => {
   };
 
   const handleLogout = () => {
-    // Clear stored user data and token
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     setAuthState('landing');
     setAuthError('');
   };
 
-  const handleBackToLanding = () => {
-    setAuthState('landing');
-    setAuthError('');
-  };
+  const handleBackToLanding = () => setAuthState('landing');
+  const handleSwitchToLogin = () => setAuthState('login');
+  const handleSwitchToSignup = () => setAuthState('signup');
 
-  const handleSwitchToLogin = () => {
-    setAuthState('login');
-    setAuthError('');
-  };
-
-  const handleSwitchToSignup = () => {
-    setAuthState('signup');
-    setAuthError('');
-  };
-
-  // Render different pages based on auth state
-  if (authState === 'landing') {
-    return <LandingPage onLogin={handleSwitchToLogin} onSignUp={handleSwitchToSignup} />;
-  }
-
-  if (authState === 'login') {
+  if (authState === 'landing') return <LandingPage onLogin={handleSwitchToLogin} onSignUp={handleSwitchToSignup} />;
+  if (authState === 'login')
     return (
-      <LoginPage
-        onLogin={handleLogin}
-        onSwitchToSignup={handleSwitchToSignup}
-        onBackToLanding={handleBackToLanding}
-        error={authError}
-        isLoading={isLoading}
-      />
+      <LoginPage onLogin={handleLogin} onSwitchToSignup={handleSwitchToSignup} onBackToLanding={handleBackToLanding} error={authError} loading={isLoading} />
     );
-  }
-
-  if (authState === 'signup') {
+  if (authState === 'signup')
     return (
-      <SignupPage
-        onSignup={handleSignup}
-        onSwitchToLogin={handleSwitchToLogin}
-        onBackToLanding={handleBackToLanding}
-        error={authError}
-        isLoading={isLoading}
-      />
+      <SignupPage onSignup={handleSignup} onSwitchToLogin={handleSwitchToLogin} onBackToLanding={handleBackToLanding} error={authError} loading={isLoading} />
     );
-  }
 
-  // Authenticated state - show main dashboard
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <Head>
         <title>BetaFlow - AI-Powered Market Intelligence</title>
         <meta name="description" content="AI-Powered Financial Analysis Dashboard with Portfolio Management" />
->>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      {/* Header */}
       <header className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-                <span className="text-white text-xl">📊</span>
-              </div>
-              <div>
-<<<<<<< HEAD
-                <h1 className="text-white text-xl font-bold">Financial Track</h1>
-=======
-                <h1 className="text-white text-xl font-bold">BetaFlow</h1>
->>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
-                <p className="text-slate-400 text-sm">AI-Powered Market Intelligence</p>
-              </div>
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
+              <span className="text-white text-xl">📊</span>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-slate-400 text-sm">Market Status</p>
-                <p className="text-green-400 text-sm font-medium">● Open</p>
-              </div>
-<<<<<<< HEAD
-=======
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg transition-colors"
-              >
-                Logout
-              </button>
->>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
+            <div>
+              <h1 className="text-white text-xl font-bold">BetaFlow</h1>
+              <p className="text-slate-400 text-sm">AI-Powered Market Intelligence</p>
             </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-slate-400 text-sm">Market Status</p>
+              <p className="text-green-400 text-sm font-medium">● Open</p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg transition-colors"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="container mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-5 mb-6 bg-slate-800/50 border border-slate-700">
@@ -253,23 +164,15 @@ const Home = () => {
           <TabsContent value="summary">
             <SummaryTab />
           </TabsContent>
-
-          <TabsContent value="news">
-            <NewsTab />
-          </TabsContent>
-
           <TabsContent value="portfolio">
-<<<<<<< HEAD
-            <PortfolioTab />
-=======
-            <PortfolioTab refreshTrigger={portfolioRefreshTrigger} />
->>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
+            <PortfolioTabComponent refreshTrigger={portfolioRefreshTrigger} />
           </TabsContent>
-
+          {/* <TabsContent value="portfolio">
+            <PortfolioTab refreshTrigger={portfolioRefreshTrigger} />
+          </TabsContent> */}
           <TabsContent value="stocks">
             <StocksTab />
           </TabsContent>
-
           <TabsContent value="ai-analysis">
             <AIAnalysisTab />
           </TabsContent>
