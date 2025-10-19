@@ -215,75 +215,69 @@ console.log("Visible news count:", visibleNews.length);
 <FinanceToggle checked={financeOnly} onChange={() => setFinanceOnly(!financeOnly)} />
       {/* News List */}
       <div className="grid gap-4">
-<<<<<<< HEAD
-        {visibleNews.map((newsItem) => (
-=======
-        {news.map((newsItem) => (
->>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
-          <Card
-            key={newsItem.id}
-            className="bg-slate-800/50 border-slate-700 hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div 
-                  className="flex-1 cursor-pointer"
-                  onClick={() => handleReadClick(newsItem)}
-                >
-                  <div className="flex items-center gap-2 mb-2" style={{marginTop:"10px"}}>
-                    <Badge className={getSentimentColor(newsItem.sentiment)}>
-                      {newsItem.sentiment}
-                    </Badge>
-                    <Badge variant="outline" className="text-slate-400 border-slate-600">
-                      {newsItem.category}
-                    </Badge>
-                    <span className="text-slate-500 text-sm">{newsItem.readTime}</span>
-                  </div>
-                  <h3 className="text-white font-medium text-lg mb-2">{newsItem.title}</h3>
-                  <p className="text-slate-400 text-sm mb-3 line-clamp-2 overflow-hidden">
-                    {truncateText(newsItem.summary, 120)}
-                  </p>
-                  <div className="flex items-center gap-4 text-slate-500 text-sm">
-                    <span>{getSourceName(newsItem.source)}</span>
-                    <span>•</span>
-                    <span>{newsItem.timestamp}</span>
-                    {newsItem.audioAvailable && (
-                      <>
-                        <span>•</span>
-                        <span className="text-blue-400">🎵 Audio Available</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 ml-4" style={{marginTop:"4%"}}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleReadClick(newsItem);
-                    }}
-                    className="text-slate-400 border-slate-600 hover:bg-slate-700"
-                  >
-                    📖 Read
-                  </Button>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAudioClick(newsItem);
-                    }}
-                    className="text-slate-400 border-slate-600 hover:bg-slate-700"
-                  >
-                    🎵 Audio
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      
+        {news.map((news) => (
+  <Card
+    key={news.id}
+    className="bg-slate-800/50 border-slate-700 hover:bg-slate-800 transition-colors cursor-pointer"
+    onClick={() => handleNewsClick(news)}
+  >
+    <CardContent className="p-6">
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center gap-2 mb-2" style={{marginTop:"10px"}}>
+            <Badge className={getSentimentColor(news.sentiment)}>
+              {news.sentiment}
+            </Badge>
+            <Badge variant="outline" className="text-slate-400 border-slate-600">
+              {news.category}
+            </Badge>
+            <span className="text-slate-500 text-sm">{news.readTime}</span>
+          </div>
+          <h3 className="text-white font-medium text-lg mb-2">{news.title}</h3>
+          <p className="text-slate-400 text-sm mb-3">{news.summary}</p>
+          <div className="flex items-center gap-4 text-slate-500 text-sm">
+            <span>{news.source}</span>
+            <span>•</span>
+            <span>{news.timestamp}</span>
+            {news.audioAvailable && (
+              <>
+                <span>•</span>
+                <span className="text-blue-400">🎵 Audio Available</span>
+              </>
+            )}
+          </div>
+        </div>
+<div className="flex flex-col gap-2 ml-4" style={{ marginTop: "5%" }}>          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedNews(news);
+              setViewMode('read');
+            }}
+            className="text-slate-400 border-slate-600 hover:bg-slate-700"
+          >
+            📖 Read
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedNews(news);
+              setViewMode('audio');
+            }}
+            className="text-slate-400 border-slate-600 hover:bg-slate-700"
+          >
+            🎵 Audio
+          </Button>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+))}
       </div>
 
       {/* News Detail Modal */}
