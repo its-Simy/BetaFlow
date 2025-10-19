@@ -26,18 +26,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const t0 = Date.now();
     const summary = await getPortfolioSummary(userId);
     const holdings = await getUserStocks(userId);
+    const elapsed = Date.now() - t0;
     
     if (!summary) {
       return res.status(404).json({ error: 'Portfolio not found' });
     }
 
     // Return the summary data directly with holdings array
-    res.status(200).json({
-      ...summary,
-      holdings: holdings || []
-    });
+    const payload = { ...summary, holdings: holdings || [] } as any;
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        const counts = (keys: string[]) => keys.reduce((acc: any, k) => {
+          acc[k] = (payload.holdings || []).reduce((c: number, h: any) => c + ((h[k] === null || h[k] === undefined || h[k] === '') ? 1 : 0), 0);
+          return acc;
+        }, {});
+        console.log('[risk-debug] /api/portfolio/summary', {
+          userId,
+          elapsedMs: elapsed,
+          holdingsCount: (payload.holdings || []).length,
+          nullCounts: counts(['shares_owned','purchase_price','current_price','purchase_date']),
+          sample: (payload.holdings || []).slice(0, 2)
+        });
+      } catch (e) {
+        console.log('[risk-debug] summary logging failed', e);
+      }
+    }
+    res.status(200).json(payload);
 
   } catch (error) {
     console.error('Portfolio summary error:', error);

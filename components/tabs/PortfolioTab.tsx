@@ -108,9 +108,29 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
       }
 
       const data = await response.json();
-      console.log('Portfolio data received:', data);
-      console.log('Holdings array:', data.holdings);
-      console.log('Holdings length:', data.holdings?.length || 0);
+      if (process.env.NODE_ENV !== 'production') {
+        try {
+          const holdingsArr = Array.isArray(data.holdings) ? data.holdings : [];
+          const symbols = [...new Set(holdingsArr.map((h: any) => h.stock_symbol))];
+          const numericIssues = holdingsArr.map((h: any) => ({
+            id: h.id,
+            symbol: h.stock_symbol,
+            sharesIsNaN: Number.isNaN(Number(h.shares_owned)),
+            currentIsNaN: Number.isNaN(Number(h.current_price)),
+            purchaseIsNaN: Number.isNaN(Number(h.purchase_price)),
+            missingDate: !h.purchase_date
+          })).filter((r: any) => r.sharesIsNaN || r.currentIsNaN || r.purchaseIsNaN || r.missingDate);
+          console.log('[risk-debug] portfolio fetch ok', {
+            userId: data.user_id,
+            holdingsCount: holdingsArr.length,
+            symbols,
+            sample: holdingsArr.slice(0, 2),
+            numericIssues
+          });
+        } catch (e) {
+          console.log('[risk-debug] portfolio fetch logging failed', e);
+        }
+      }
       
       setPortfolioSummary(data);
       setHoldings(data.holdings || []);
@@ -153,9 +173,12 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
   // Risk Analysis function
   const analyzeRisk = async () => {
     try {
-      console.log('Starting risk analysis...');
-      console.log('Current holdings state:', holdings);
-      console.log('Holdings length:', holdings?.length || 0);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[risk-debug] starting risk analysis', {
+          holdingsCount: holdings?.length || 0,
+          symbols: [...new Set(holdings.map(h => h.stock_symbol))]
+        });
+      }
       
       setRiskLoading(true);
       setRiskError(null);
@@ -173,15 +196,48 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
         return;
       }
 
-      // Prepare holdings data for risk analysis
-      const holdingsData = holdings.map(holding => ({
-        symbol: holding.stock_symbol,
-        shares: holding.shares_owned,
-        value: holding.shares_owned * holding.current_price,
-        sector: 'Unknown' // We'll need to get this from stock data
+      // Prepare holdings data for risk analysis with numeric normalization
+      const normalized = holdings.map(holding => {
+        const shares = Number(holding.shares_owned);
+        const current = Number(holding.current_price);
+        const purchase = Number(holding.purchase_price);
+        const value = (Number.isFinite(shares) && Number.isFinite(current)) ? shares * current : NaN;
+        return {
+          original: holding,
+          symbol: holding.stock_symbol,
+          shares,
+          current,
+          purchase,
+          value
+        };
+      });
+
+      if (process.env.NODE_ENV !== 'production') {
+        const nanRows = normalized.filter(n => !Number.isFinite(n.shares) || !Number.isFinite(n.current) || !Number.isFinite(n.value));
+        const sharesArr = normalized.map(n => n.shares).filter(Number.isFinite) as number[];
+        const priceArr = normalized.map(n => n.current).filter(Number.isFinite) as number[];
+        const sum = (arr: number[]) => arr.reduce((a, b) => a + b, 0);
+        const avg = (arr: number[]) => arr.length ? sum(arr) / arr.length : 0;
+        console.log('[risk-debug] payload summary', {
+          count: normalized.length,
+          symbols: normalized.map(n => n.symbol),
+          shares: { min: Math.min(...sharesArr), max: Math.max(...sharesArr), avg: Number(avg(sharesArr).toFixed(3)) },
+          prices: { min: Math.min(...priceArr), max: Math.max(...priceArr), avg: Number(avg(priceArr).toFixed(3)) },
+          nanIssuesCount: nanRows.length,
+          nanExamples: nanRows.slice(0, 2)
+        });
+      }
+
+      const holdingsData = normalized.map(n => ({
+        symbol: n.symbol,
+        shares: Number.isFinite(n.shares) ? n.shares : 0,
+        value: Number.isFinite(n.value) ? n.value : 0,
+        sector: 'Unknown'
       }));
 
-      console.log('Sending risk analysis request with holdings:', holdingsData);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[risk-debug] sending risk request', { holdingsCount: holdingsData.length, sample: holdingsData.slice(0, 3) });
+      }
 
       const response = await fetch('/api/portfolio/risk-analysis', {
         method: 'POST',
@@ -341,8 +397,8 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
           <CardContent>
             <div className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
               {holdings.map((holding) => {
-                const currentValue = (holding.shares_owned ?? 0) * (holding.current_price ?? 0);
-                const purchaseValue = (holding.shares_owned ?? 0) * (holding.purchase_price ?? 0);
+                const currentValue = Number(holding.shares_owned ?? 0) * Number(holding.current_price ?? 0);
+                const purchaseValue = Number(holding.shares_owned ?? 0) * Number(holding.purchase_price ?? 0);
                 const profitLoss = currentValue - purchaseValue;
                 const profitLossPercent = purchaseValue > 0 ? (profitLoss / purchaseValue) * 100 : 0;
                 const totalValue = parseFloat((portfolioSummary?.total_value ?? 0).toString());
@@ -373,11 +429,11 @@ export function PortfolioTab({ refreshTrigger }: PortfolioTabProps = {}) {
                       </div>
                       <div>
                         <div className="text-slate-400 text-xs mb-1">Current Price</div>
-                        <div className="text-white font-medium">${(holding.current_price ?? 0).toFixed(2)}</div>
+                        <div className="text-white font-medium">${Number(holding.current_price ?? 0).toFixed(2)}</div>
                       </div>
                       <div>
                         <div className="text-slate-400 text-xs mb-1">Buy Price</div>
-                        <div className="text-white font-medium">${(holding.purchase_price ?? 0).toFixed(2)}</div>
+                        <div className="text-white font-medium">${Number(holding.purchase_price ?? 0).toFixed(2)}</div>
                       </div>
                       <div>
                         <div className="text-slate-400 text-xs mb-1">Current Value</div>

@@ -15,6 +15,38 @@ from db import get_db_cursor
 logger = logging.getLogger(__name__)
 
 
+def _normalize_time_index_series(price_series: pd.Series) -> pd.Series:
+    """Ensure the series index is a UTC tz-aware DatetimeIndex, sorted, without duplicates."""
+    try:
+        if not isinstance(price_series.index, pd.DatetimeIndex):
+            price_series.index = pd.to_datetime(price_series.index, utc=True, errors='coerce')
+        elif price_series.index.tz is None:
+            price_series.index = price_series.index.tz_localize('UTC')
+        else:
+            price_series.index = price_series.index.tz_convert('UTC')
+        price_series = price_series.sort_index()
+        return price_series[~price_series.index.duplicated()]
+    except Exception as e:
+        logger.warning(f"Failed to normalize time index: {e}")
+        return price_series
+
+
+def _normalize_time_index_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Ensure the DataFrame index is a UTC tz-aware DatetimeIndex, sorted, without duplicates."""
+    try:
+        if not isinstance(df.index, pd.DatetimeIndex):
+            df.index = pd.to_datetime(df.index, utc=True, errors='coerce')
+        elif df.index.tz is None:
+            df.index = df.index.tz_localize('UTC')
+        else:
+            df.index = df.index.tz_convert('UTC')
+        df = df.sort_index()
+        return df[~df.index.duplicated()]
+    except Exception as e:
+        logger.warning(f"Failed to normalize DF time index: {e}")
+        return df
+
+
 def get_cached_historical_data(user_id, symbols, days=365):
     """
     Retrieve cached historical data from database
@@ -76,6 +108,7 @@ def save_historical_data_to_cache(user_id, symbol, price_series):
     """
     try:
         # Convert pandas Series to JSON format
+        price_series = _normalize_time_index_series(price_series)
         dates = price_series.index.strftime('%Y-%m-%d').tolist()
         prices = price_series.values.tolist()
         
@@ -158,6 +191,7 @@ def fetch_from_polygon(symbol, api_key, days=365):
                 dates = [datetime.fromtimestamp(r['t']/1000) for r in data['results']]
                 prices = [r['c'] for r in data['results']]
                 price_series = pd.Series(prices, index=dates)
+                price_series = _normalize_time_index_series(price_series)
                 logger.info(f"Fetched {len(price_series)} days of data for {symbol} from Polygon")
                 return price_series
         else:
@@ -190,7 +224,7 @@ def fetch_from_fmp(symbol, api_key, days=365):
                 dates, closes = zip(*prices)
                 
                 price_series = pd.Series(closes, index=pd.to_datetime(dates))
-                price_series = price_series.sort_index()
+                price_series = _normalize_time_index_series(price_series)
                 logger.info(f"Fetched {len(price_series)} days of data for {symbol} from FMP")
                 return price_series
         else:
@@ -223,9 +257,10 @@ def fetch_historical_data_with_cache(user_id, symbols, api_key, days=365):
         if symbol in cached_data and is_cache_fresh(cached_data[symbol], max_age_days=30):
             # Use cached data
             data_json = cached_data[symbol]['data']
-            dates = pd.to_datetime(data_json['dates'])
+            dates = pd.to_datetime(data_json['dates'], utc=True, errors='coerce')
             prices = data_json['prices']
-            all_prices[symbol] = pd.Series(prices, index=dates)
+            series = pd.Series(prices, index=dates)
+            all_prices[symbol] = _normalize_time_index_series(series)
             logger.info(f"Using cached data for {symbol}")
         else:
             # Need to fetch
@@ -242,7 +277,7 @@ def fetch_historical_data_with_cache(user_id, symbols, api_key, days=365):
                 
             data = fetch_from_yfinance(symbol, days)
             if data is not None:
-                all_prices[symbol] = data
+                all_prices[symbol] = _normalize_time_index_series(data)
                 save_historical_data_to_cache(user_id, symbol, data)
                 continue
             
@@ -250,14 +285,14 @@ def fetch_historical_data_with_cache(user_id, symbols, api_key, days=365):
             polygon_api_key = os.getenv('POLYGON_API_KEY')
             data = fetch_from_polygon(symbol, polygon_api_key, days)
             if data is not None:
-                all_prices[symbol] = data
+                all_prices[symbol] = _normalize_time_index_series(data)
                 save_historical_data_to_cache(user_id, symbol, data)
                 continue
             
             # Try FMP as last resort
             data = fetch_from_fmp(symbol, api_key, days)
             if data is not None:
-                all_prices[symbol] = data
+                all_prices[symbol] = _normalize_time_index_series(data)
                 save_historical_data_to_cache(user_id, symbol, data)
             else:
                 logger.error(f"All data sources failed for {symbol}")
@@ -267,6 +302,7 @@ def fetch_historical_data_with_cache(user_id, symbols, api_key, days=365):
     
     # Combine into DataFrame
     prices_df = pd.DataFrame(all_prices)
+    prices_df = _normalize_time_index_df(prices_df)
     prices_df = prices_df.fillna(method='ffill').dropna()
     
     return prices_df
@@ -348,7 +384,7 @@ def fetch_historical_data(symbols, api_key, days=365):
         logger.info("No real data available, generating synthetic data for demonstration")
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
-        date_range = pd.date_range(start=start_date, end=end_date, freq='D')
+        date_range = pd.date_range(start=start_date, end=end_date, freq='D', tz='UTC')
         
         for symbol in symbols:
             # Generate realistic synthetic price data
@@ -366,7 +402,7 @@ def fetch_historical_data(symbols, api_key, days=365):
                 new_price = prices[-1] * (1 + returns[i])
                 prices.append(max(new_price, 1))  # Ensure positive prices
             
-            all_prices[symbol] = pd.Series(prices, index=date_range)
+            all_prices[symbol] = _normalize_time_index_series(pd.Series(prices, index=date_range))
             logger.info(f"Generated {len(prices)} days of synthetic data for {symbol}")
     
     if not all_prices:
@@ -374,6 +410,7 @@ def fetch_historical_data(symbols, api_key, days=365):
     
     # Combine into DataFrame
     prices_df = pd.DataFrame(all_prices)
+    prices_df = _normalize_time_index_df(prices_df)
     prices_df = prices_df.fillna(method='ffill').dropna()
     
     return prices_df
