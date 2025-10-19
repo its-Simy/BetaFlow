@@ -11,13 +11,33 @@ type NewsItem = {
   title: string;
   summary: string;
   fullText?:string;
-  source: string;
+  source: string | { name: string };
   timestamp: string;
   category: string;
   sentiment: string;
   readTime: string;
   audioAvailable: boolean;
   url:string;
+};
+
+// Helper function to get source name
+const getSourceName = (source: string | { name: string }): string => {
+  return typeof source === 'string' ? source : source.name;
+};
+
+// Helper function to truncate text intelligently
+const truncateText = (text: string, maxLength: number = 120): string => {
+  if (!text || text.length <= maxLength) return text;
+  
+  const truncated = text.substring(0, maxLength);
+  const lastSpace = truncated.lastIndexOf(' ');
+  
+  // If we can find a space near the end, cut there to avoid mid-word breaks
+  if (lastSpace > maxLength - 20) {
+    return truncated.substring(0, lastSpace) + '...';
+  }
+  
+  return truncated + '...';
 };
 
 type SummaryData = {
@@ -211,9 +231,11 @@ const keywords = ['finance', 'stock', 'trade', 'bitcoin', 'crypto', 'market', 'n
                     <span className="text-slate-500 text-sm">{newsItem.readTime}</span>
                   </div>
                   <h3 className="text-white font-medium text-lg mb-2">{newsItem.title}</h3>
-                  <p className="text-slate-400 text-sm mb-3">{newsItem.summary}</p>
+                  <p className="text-slate-400 text-sm mb-3 line-clamp-2 overflow-hidden">
+                    {truncateText(newsItem.summary, 120)}
+                  </p>
                   <div className="flex items-center gap-4 text-slate-500 text-sm">
-                    <span>{newsItem.source}</span>
+                    <span>{getSourceName(newsItem.source)}</span>
                     <span>•</span>
                     <span>{newsItem.timestamp}</span>
                     {newsItem.audioAvailable && (
@@ -274,53 +296,48 @@ const keywords = ['finance', 'stock', 'trade', 'bitcoin', 'crypto', 'market', 'n
                 </Button>
               </div>
               <CardDescription className="text-slate-400">
-                {selectedNews.source} • {selectedNews.timestamp} • {selectedNews.readTime}
+                {getSourceName(selectedNews.source)} • {selectedNews.timestamp} • {selectedNews.readTime}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {viewMode === 'read' ? (
                 <div className="space-y-6">
-                  {/* Article Summary */}
-                  <div className="p-4 rounded-lg bg-slate-900/50">
-                    <h4 className="text-white font-medium mb-3 flex items-center gap-2">
-                      📄 Article Summary
-                    </h4>
-                    <p className="text-slate-300 leading-relaxed">{selectedNews.summary}</p>
-                  </div>
-                  
                   {/* Gemini AI Analysis */}
                   {isLoadingSummary ? (
-                    <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                      <h4 className="text-blue-400 font-medium mb-3 flex items-center gap-2">
-                        🤖 AI Analysis
+                    <div className="p-6 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                      <h4 className="text-blue-400 font-medium mb-4 flex items-center gap-2 text-lg">
+                        🤖 AI Analysis in Progress
                       </h4>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                          <p className="text-slate-300 text-sm">Analyzing key points...</p>
+                          <p className="text-slate-300 text-sm">Extracting key insights from the article...</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                          <p className="text-slate-300 text-sm">Evaluating market impact...</p>
+                          <p className="text-slate-300 text-sm">Analyzing market implications...</p>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                          <p className="text-slate-300 text-sm">Assessing sentiment...</p>
+                          <p className="text-slate-300 text-sm">Determining sentiment and impact...</p>
                         </div>
                       </div>
+                      <div className="mt-4 text-center">
+                        <p className="text-slate-400 text-xs">Powered by Gemini AI</p>
+                      </div>
                     </div>
-                  ) : summary && (
-                    <div className="space-y-4">
-                      {/* Main Points */}
-                      <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                        <h4 className="text-blue-400 font-medium mb-3 flex items-center gap-2">
-                          🎯 Key Points
+                  ) : summary ? (
+                    <div className="space-y-6">
+                      {/* Main Points - Primary Focus */}
+                      <div className="p-6 rounded-lg bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20">
+                        <h4 className="text-blue-400 font-medium mb-4 flex items-center gap-2 text-lg">
+                          🎯 Key Insights
                         </h4>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           {summary.mainPoints && summary.mainPoints.map((point: string, index: number) => (
-                            <div key={index} className="flex items-start gap-3">
+                            <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/50">
                               <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
-                              <p className="text-slate-300 text-sm leading-relaxed">{point}</p>
+                              <p className="text-slate-200 text-sm leading-relaxed">{point}</p>
                             </div>
                           ))}
                         </div>
@@ -328,15 +345,15 @@ const keywords = ['finance', 'stock', 'trade', 'bitcoin', 'crypto', 'market', 'n
 
                       {/* Key Impacts */}
                       {summary.keyImpacts && summary.keyImpacts.length > 0 && (
-                        <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                          <h4 className="text-green-400 font-medium mb-3 flex items-center gap-2">
+                        <div className="p-6 rounded-lg bg-gradient-to-br from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                          <h4 className="text-green-400 font-medium mb-4 flex items-center gap-2 text-lg">
                             📊 Market Impact
                           </h4>
-                          <div className="space-y-2">
+                          <div className="space-y-3">
                             {summary.keyImpacts.map((impact: string, index: number) => (
-                              <div key={index} className="flex items-start gap-3">
+                              <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-slate-900/50">
                                 <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
-                                <p className="text-slate-300 text-sm leading-relaxed">{impact}</p>
+                                <p className="text-slate-200 text-sm leading-relaxed">{impact}</p>
                               </div>
                             ))}
                           </div>
@@ -344,18 +361,38 @@ const keywords = ['finance', 'stock', 'trade', 'bitcoin', 'crypto', 'market', 'n
                       )}
 
                       {/* Sentiment */}
-                      <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                        <h4 className="text-purple-400 font-medium mb-2 flex items-center gap-2">
+                      <div className="p-6 rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                        <h4 className="text-purple-400 font-medium mb-4 flex items-center gap-2 text-lg">
                           📈 Sentiment Analysis
                         </h4>
-                        <Badge className={
-                          summary.sentiment === 'positive' ? 'bg-green-500/20 text-green-400 border-green-500/50' :
-                          summary.sentiment === 'negative' ? 'bg-red-500/20 text-red-400 border-red-500/50' :
-                          'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
-                        }>
-                          {summary.sentiment || 'neutral'}
-                        </Badge>
+                        <div className="flex items-center gap-3">
+                          <Badge className={
+                            summary.sentiment === 'positive' ? 'bg-green-500/20 text-green-400 border-green-500/50 px-4 py-2 text-sm' :
+                            summary.sentiment === 'negative' ? 'bg-red-500/20 text-red-400 border-red-500/50 px-4 py-2 text-sm' :
+                            'bg-yellow-500/20 text-yellow-400 border-yellow-500/50 px-4 py-2 text-sm'
+                          }>
+                            {summary.sentiment || 'neutral'}
+                          </Badge>
+                          <p className="text-slate-400 text-sm">
+                            AI-powered sentiment analysis of the article content
+                          </p>
+                        </div>
                       </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <div className="text-slate-400 mb-4">
+                        <span className="text-4xl mb-4 block">🤖</span>
+                        <h3 className="text-lg font-medium text-white mb-2">AI Analysis Not Available</h3>
+                        <p className="text-sm">Unable to generate AI insights for this article.</p>
+                      </div>
+                      <Button 
+                        onClick={() => handleReadClick(selectedNews)}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <span className="mr-2">🔄</span>
+                        Try Again
+                      </Button>
                     </div>
                   )}
                   

@@ -14,7 +14,7 @@ type AuthState = 'landing' | 'login' | 'signup' | 'authenticated';
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('summary');
-  const [authState, setAuthState] = useState<AuthState>('landing');
+  const [authState, setAuthState] = useState<AuthState>('authenticated');
   const [authError, setAuthError] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [portfolioRefreshTrigger, setPortfolioRefreshTrigger] = useState(0);
