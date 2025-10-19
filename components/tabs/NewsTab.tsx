@@ -155,8 +155,12 @@ const keywords = ['finance', 'stock', 'trade', 'bitcoin', 'crypto', 'market', 'n
         )
       )
     : news;
+<<<<<<< HEAD
 console.log("Toggle state:", financeOnly);
 console.log("Visible news count:", visibleNews.length);
+=======
+
+>>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
   return (
     <div className="space-y-6">
       {/* Search and AI Integration */}
@@ -191,7 +195,11 @@ console.log("Visible news count:", visibleNews.length);
 <FinanceToggle checked={financeOnly} onChange={() => setFinanceOnly(!financeOnly)} />
       {/* News List */}
       <div className="grid gap-4">
+<<<<<<< HEAD
         {visibleNews.map((newsItem) => (
+=======
+        {news.map((newsItem) => (
+>>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
           <Card
             key={newsItem.id}
             className="bg-slate-800/50 border-slate-700 hover:bg-slate-800 transition-colors cursor-pointer"

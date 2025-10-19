@@ -36,4 +36,9 @@ next-env.d.ts
 
 # API keys
 .env
+.env.local
+.env.example
+backend/.env
+backend/.env.local
+backend/.env.example
 

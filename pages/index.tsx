@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 import { useState } from 'react';
+=======
+import { useState, useEffect } from 'react';
+>>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
 import Head from 'next/head';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { SummaryTab } from '../components/tabs/SummaryTab';
@@ -6,6 +10,7 @@ import { NewsTab } from '../components/tabs/NewsTab';
 import { PortfolioTab } from '../components/tabs/PortfolioTab';
 import { StocksTab } from '../components/tabs/StocksTab';
 import { AIAnalysisTab } from '../components/tabs/AIAnalysisTab';
+<<<<<<< HEAD
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState('summary');
@@ -15,6 +20,176 @@ const Home = () => {
       <Head>
         <title>Financial Track - AI-Powered Market Intelligence</title>
         <meta name="description" content="AI-Powered Financial Analysis Dashboard with Gemini Integration" />
+=======
+import LandingPage from '../components/LandingPage';
+import LoginPage from '../components/auth/LoginPage';
+import SignupPage from '../components/auth/SignupPage';
+
+type AuthState = 'landing' | 'login' | 'signup' | 'authenticated';
+
+const Home = () => {
+  const [activeTab, setActiveTab] = useState('summary');
+  const [authState, setAuthState] = useState<AuthState>('landing');
+  const [authError, setAuthError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [portfolioRefreshTrigger, setPortfolioRefreshTrigger] = useState(0);
+
+  // Check for existing authentication on page load
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (token && user) {
+      // Verify token is still valid by making a test request
+      fetch('/api/portfolio/summary', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      })
+      .then(response => {
+        if (response.ok) {
+          setAuthState('authenticated');
+        } else {
+          // Token is invalid, clear storage
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      })
+      .catch(() => {
+        // Network error, clear storage
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      });
+    }
+  }, []);
+
+  const handleLogin = async (email: string, password: string) => {
+    setIsLoading(true);
+    setAuthError('');
+    
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Store user data and token in localStorage
+        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('token', data.token);
+        setAuthState('authenticated');
+        setAuthError('');
+        // Trigger portfolio refresh
+        setPortfolioRefreshTrigger(prev => prev + 1);
+      } else {
+        setAuthError(data.error || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setAuthError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignup = async (email: string, password: string, firstName: string, lastName: string) => {
+    setIsLoading(true);
+    setAuthError('');
+    
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email, 
+          password, 
+          first_name: firstName, 
+          last_name: lastName 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Account created successfully, now log them in
+        await handleLogin(email, password);
+      } else {
+        setAuthError(data.error || 'Failed to create account');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      setAuthError('Network error. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    // Clear stored user data and token
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    setAuthState('landing');
+    setAuthError('');
+  };
+
+  const handleBackToLanding = () => {
+    setAuthState('landing');
+    setAuthError('');
+  };
+
+  const handleSwitchToLogin = () => {
+    setAuthState('login');
+    setAuthError('');
+  };
+
+  const handleSwitchToSignup = () => {
+    setAuthState('signup');
+    setAuthError('');
+  };
+
+  // Render different pages based on auth state
+  if (authState === 'landing') {
+    return <LandingPage onLogin={handleSwitchToLogin} onSignUp={handleSwitchToSignup} />;
+  }
+
+  if (authState === 'login') {
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+        onSwitchToSignup={handleSwitchToSignup}
+        onBackToLanding={handleBackToLanding}
+        error={authError}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  if (authState === 'signup') {
+    return (
+      <SignupPage
+        onSignup={handleSignup}
+        onSwitchToLogin={handleSwitchToLogin}
+        onBackToLanding={handleBackToLanding}
+        error={authError}
+        isLoading={isLoading}
+      />
+    );
+  }
+
+  // Authenticated state - show main dashboard
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      <Head>
+        <title>BetaFlow - AI-Powered Market Intelligence</title>
+        <meta name="description" content="AI-Powered Financial Analysis Dashboard with Portfolio Management" />
+>>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
@@ -27,7 +202,11 @@ const Home = () => {
                 <span className="text-white text-xl">📊</span>
               </div>
               <div>
+<<<<<<< HEAD
                 <h1 className="text-white text-xl font-bold">Financial Track</h1>
+=======
+                <h1 className="text-white text-xl font-bold">BetaFlow</h1>
+>>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
                 <p className="text-slate-400 text-sm">AI-Powered Market Intelligence</p>
               </div>
             </div>
@@ -36,6 +215,15 @@ const Home = () => {
                 <p className="text-slate-400 text-sm">Market Status</p>
                 <p className="text-green-400 text-sm font-medium">● Open</p>
               </div>
+<<<<<<< HEAD
+=======
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg transition-colors"
+              >
+                Logout
+              </button>
+>>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
             </div>
           </div>
         </div>
@@ -71,7 +259,11 @@ const Home = () => {
           </TabsContent>
 
           <TabsContent value="portfolio">
+<<<<<<< HEAD
             <PortfolioTab />
+=======
+            <PortfolioTab refreshTrigger={portfolioRefreshTrigger} />
+>>>>>>> 7b39651ff8b411e351c9fefe575b5f318e5d12f5
           </TabsContent>
 
           <TabsContent value="stocks">
