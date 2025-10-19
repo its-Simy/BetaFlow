@@ -1,10 +1,12 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
+import stocksRouter from './routes/stocksTrend';
 import newsRoutes from "./routes/news";
 import audioRoutes from './routes/audio'
 import readNewsRouter from "./routes/readNews";
 import insightsRoutes from "./routes/insights";
+import summaryCardsRouter from './routes/summaryCards';
 import { findAvailablePort, getPortFromEnv, getFallbackPorts } from "./utils/portUtils";
 
 dotenv.config();
@@ -12,6 +14,8 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/api/summary-cards', summaryCardsRouter);
+app.use('/api/stocks', stocksRouter);
 app.use('/api/audio', audioRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/readnews", readNewsRouter);
