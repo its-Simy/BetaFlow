@@ -16,8 +16,8 @@ const PortfolioTabComponent: any = PortfolioTab;
 type AuthState = 'landing' | 'login' | 'signup' | 'authenticated';
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState<string>('summary');
-  const [authState, setAuthState] = useState<AuthState>('landing');
+  const [activeTab, setActiveTab] = useState('summary');
+  const [authState, setAuthState] = useState<AuthState>('authenticated');
   const [authError, setAuthError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [portfolioRefreshTrigger, setPortfolioRefreshTrigger] = useState<number>(0);

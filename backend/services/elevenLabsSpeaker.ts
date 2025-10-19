@@ -1,7 +1,9 @@
 import axios from "axios";
 import dotenv from "dotenv";
-dotenv.config();
-dotenv.config({ path: "../.env" });
+import path from "path";
+
+// Load environment variables from the root .env file
+dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const ELEVEN_API_KEY = process.env.ELEVEN_API_KEY;
 const ELEVEN_VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Rachel (default)
