@@ -133,13 +133,13 @@ export function AIAnalysisTab() {
   return (
     <div className="space-y-6">
       {/* AI Query Input */}
-      <Card className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 border-purple-500/20">
+      <Card className="bg-gradient-to-br from-purple-500/20 to-blue-500/20 border-purple-400/40 shadow-lg shadow-purple-500/10">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
-            <span className="text-purple-400 text-xl">🤖</span>
+            <span className="text-purple-300 text-xl">🤖</span>
             Gemini AI Financial Analyst
           </CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardDescription className="text-slate-300">
             Ask anything about stocks, market trends, or investment strategies. Powered by Gemini AI.
           </CardDescription>
         </CardHeader>
@@ -147,13 +147,13 @@ export function AIAnalysisTab() {
           <div className="space-y-6">
             {/* Ticker Symbol Input */}
             <div className="space-y-2">
-              <label className="text-slate-300 text-sm font-medium">Quick Stock Analysis</label>
+              <label className="text-white text-sm font-medium">Quick Stock Analysis</label>
               <div className="flex gap-2">
                 <Input
                   placeholder="Enter ticker symbol (e.g., AAPL, TSLA, NVDA)"
                   value={tickerSymbol}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTickerSymbol(e.target.value.toUpperCase())}
-                  className="bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500"
+                  className="bg-slate-800/70 border-slate-600 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-cyan-400/60 focus:border-cyan-400 transition-all duration-300 hover:border-slate-500"
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       handleTickerAnalysis();
@@ -163,17 +163,17 @@ export function AIAnalysisTab() {
                 <Button
                   onClick={handleTickerAnalysis}
                   disabled={!tickerSymbol.trim() || isAnalyzing}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                  className="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-cyan-400/50 border border-cyan-400/30 px-6 py-2.5 font-medium text-white hover:scale-105 transform"
                 >
                   {isAnalyzing ? (
                     <>
                       <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                      Analyzing...
+                      <span className="animate-pulse">Analyzing...</span>
                     </>
                   ) : (
                     <>
-                      <span className="mr-2">📊</span>
-                      Analyze Stock
+                      <span className="mr-2 text-lg">📊</span>
+                      <span className="font-semibold">Analyze Stock</span>
                     </>
                   )}
                 </Button>
@@ -182,7 +182,7 @@ export function AIAnalysisTab() {
             
             {/* Free Text Analysis */}
             <div className="space-y-2">
-              <label className="text-slate-300 text-sm font-medium">General Market Analysis</label>
+              <label className="text-white text-sm font-medium">General Market Analysis</label>
               <div className="flex gap-2">
                 <Textarea
                   placeholder="Ask me anything about the financial markets...
@@ -197,22 +197,28 @@ Examples:
 • Best defensive stocks for market downturn?"
                   value={query}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setQuery(e.target.value)}
-                  className="min-h-[120px] bg-slate-900/50 border-slate-700 text-white placeholder:text-slate-500 resize-none flex-1"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      handleAnalyze();
+                    }
+                  }}
+                  className="min-h-[120px] bg-slate-800/70 border-slate-600 text-white placeholder:text-slate-400 resize-none flex-1 focus:ring-2 focus:ring-pink-400/60 focus:border-pink-400 transition-all duration-300 hover:border-slate-500"
                 />
                 <Button
                   onClick={handleAnalyze}
                   disabled={!query.trim() || isAnalyzing}
-                  className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 self-start"
+                  className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-400 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg hover:shadow-pink-400/50 border border-pink-400/30 px-6 py-2.5 font-medium self-start text-white hover:scale-105 transform"
                 >
                   {isAnalyzing ? (
                     <>
                       <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                      Analyzing...
+                      <span className="animate-pulse">Analyzing...</span>
                     </>
                   ) : (
                     <>
-                      <span className="mr-2">🚀</span>
-                      Analyze Query
+                      <span className="mr-2 text-lg">🚀</span>
+                      <span className="font-semibold">Analyze Query</span>
                     </>
                   )}
                 </Button>
@@ -220,8 +226,14 @@ Examples:
             </div>
             
             <div className="flex items-center justify-center">
-              <p className="text-slate-500 text-sm">
+              <p className="text-white text-sm">
                 💡 Powered by Gemini AI - Analyzing financial headlines, SEC filings, and analyst reports
+              </p>
+            </div>
+            
+            <div className="flex items-center justify-center">
+              <p className="text-white text-xs">
+                ⌨️ Keyboard shortcuts: Enter (ticker) | Ctrl/Cmd + Enter (query)
               </p>
             </div>
             
@@ -254,7 +266,7 @@ Examples:
                 </Badge>
               </div>
             </div>
-            <CardDescription className="text-slate-400">
+            <CardDescription className="text-white">
               Confidence: {currentAnalysis.confidence}% | Query: "{currentAnalysis.query}" | {currentAnalysis.timestamp}
             </CardDescription>
           </CardHeader>
@@ -352,18 +364,28 @@ Examples:
             )}
 
             {/* Action Buttons */}
-            <div className="flex gap-2">
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <span className="mr-2">📊</span>
-                View Related Stocks
+            <div className="flex gap-3 flex-wrap">
+              <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 transition-all duration-300 shadow-lg hover:shadow-emerald-400/50 border border-emerald-400/30 px-4 py-2 text-white hover:scale-105 transform">
+                <span className="mr-2 text-lg">📊</span>
+                <span className="font-medium">View Related Stocks</span>
               </Button>
-              <Button variant="outline" className="border-slate-600 text-slate-400">
-                <span className="mr-2">💼</span>
-                Add to Watchlist
+              <Button variant="outline" className="border-lime-400/60 text-lime-300 hover:bg-lime-400/20 hover:border-lime-300 hover:text-lime-200 transition-all duration-300 px-4 py-2 hover:scale-105 transform">
+                <span className="mr-2 text-lg">💼</span>
+                <span className="font-medium">Add to Watchlist</span>
               </Button>
-              <Button variant="outline" className="border-slate-600 text-slate-400">
-                <span className="mr-2">🔄</span>
-                Refresh Analysis
+              <Button 
+                variant="outline" 
+                className="border-orange-400/60 text-orange-300 hover:bg-orange-400/20 hover:border-orange-300 hover:text-orange-200 transition-all duration-300 px-4 py-2 hover:scale-105 transform"
+                onClick={() => {
+                  if (currentAnalysis.query.includes('stock analysis')) {
+                    handleTickerAnalysis();
+                  } else {
+                    handleAnalyze();
+                  }
+                }}
+              >
+                <span className="mr-2 text-lg">🔄</span>
+                <span className="font-medium">Refresh Analysis</span>
               </Button>
             </div>
           </CardContent>
