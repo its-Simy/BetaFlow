@@ -42,3 +42,8 @@ backend/.env
 backend/.env.local
 backend/.env.example
 
+# Python virtual environments
+finance-optimizer/venv/
+*.pyc
+__pycache__/
+
