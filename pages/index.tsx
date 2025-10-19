@@ -16,8 +16,9 @@ const Home = () => {
   const [activeTab, setActiveTab] = useState('summary');
   const [authState, setAuthState] = useState<AuthState>('landing');
   const [authError, setAuthError] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [portfolioRefreshTrigger, setPortfolioRefreshTrigger] = useState(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [portfolioRefreshTrigger, setPortfolioRefreshTrigger] = useState<number>(0);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Check for existing authentication on page load
   useEffect(() => {
@@ -25,6 +26,13 @@ const Home = () => {
     const user = localStorage.getItem('user');
     
     if (token && user) {
+      try {
+        const userData = JSON.parse(user);
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+
       // Verify token is still valid by making a test request
       fetch('/api/portfolio/summary', {
         headers: {
@@ -38,6 +46,7 @@ const Home = () => {
           // Token is invalid, clear storage
           localStorage.removeItem('token');
           localStorage.removeItem('user');
+          setCurrentUser(null);
           setAuthState('landing');
         }
       })
@@ -46,6 +55,7 @@ const Home = () => {
         console.error('Auth check failed:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        setCurrentUser(null);
         setAuthState('landing');
       });
     } else {
@@ -75,6 +85,7 @@ const Home = () => {
         // Store user data and token in localStorage
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.token);
+        setCurrentUser(data.user);
         setAuthState('authenticated');
         setAuthError('');
         // Trigger portfolio refresh
@@ -134,6 +145,7 @@ const Home = () => {
     // Clear stored user data and token
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    setCurrentUser(null);
     setAuthState('landing');
     setAuthError('');
   };
@@ -208,10 +220,26 @@ const Home = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-slate-400 text-sm">Market Status</p>
-                <p className="text-green-400 text-sm font-medium">● Open</p>
-              </div>
+              {/* User Info Display */}
+              {currentUser && (
+                <div className="flex items-center gap-3 px-4 py-2 bg-slate-800/50 rounded-lg border border-slate-700">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm font-semibold">
+                      {currentUser.first_name?.charAt(0)?.toUpperCase() || currentUser.email?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-white text-sm font-medium">
+                      {currentUser.first_name && currentUser.last_name 
+                        ? `${currentUser.first_name} ${currentUser.last_name}`
+                        : currentUser.first_name || 'User'
+                      }
+                    </p>
+                    <p className="text-slate-400 text-xs">{currentUser.email}</p>
+                  </div>
+                </div>
+              )}
+              
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg transition-colors"
