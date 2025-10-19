@@ -64,7 +64,7 @@ npm run dev &
 FRONTEND_PID=$!
 
 echo -e "${GREEN}🎉 BetaFlow is running!${NC}"
-echo -e "${GREEN}📡 Frontend: http://localhost:3000${NC}"
+echo -e "${GREEN}📡 Frontend: so http://localhost:3000${NC}"
 echo -e "${GREEN}🔧 Backend: Check terminal for actual port${NC}"
 echo ""
 echo "Press Ctrl+C to stop both servers"
