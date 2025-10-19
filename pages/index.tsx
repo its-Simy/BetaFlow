@@ -127,10 +127,6 @@ const Home = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-slate-400 text-sm">Market Status</p>
-              <p className="text-green-400 text-sm font-medium">● Open</p>
-            </div>
             <button
               onClick={handleLogout}
               className="px-4 py-2 text-slate-300 hover:text-white border border-slate-600 hover:border-slate-500 rounded-lg transition-colors"
